@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Geist } from "next/font/google";
+import { NavBar } from "@/components/NavBar";
 import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Produsul Cereais - Estoque",
@@ -13,23 +19,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={geistSans.variable}>
       <body>
-        <nav
-          style={{
-            display: "flex",
-            gap: 16,
-            padding: "16px 24px",
-            borderBottom: "1px solid #ddd",
-          }}
-        >
-          <strong>Produsul Cereais</strong>
-          <Link href="/">Início</Link>
-          <Link href="/marcas">Marcas</Link>
-          <Link href="/produtos">Produtos</Link>
-          <Link href="/estoque">Estoque</Link>
-        </nav>
-        <main style={{ padding: 24 }}>{children}</main>
+        <NavBar />
+        <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
       </body>
     </html>
   );
