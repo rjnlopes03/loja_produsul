@@ -1,3 +1,7 @@
+# Loja Produsul
+
+Sistema de controle de estoque de rações da Produsul Cereais.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
