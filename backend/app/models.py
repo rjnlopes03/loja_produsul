@@ -19,6 +19,9 @@ class FaseVida(str, enum.Enum):
     FILHOTE = "filhote"
     ADULTO = "adulto"
     SENIOR = "senior"
+
+
+class CASTRADO(str, enum.Enum):
     CASTRADO = "castrado"
 
 
