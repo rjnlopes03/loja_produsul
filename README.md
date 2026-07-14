@@ -2,39 +2,52 @@
 
 Sistema de controle de estoque de rações da Produsul Cereais.
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Permite cadastrar, editar, remover e filtrar rações por espécie de animal
+(cachorro, gato, coelho, galinha, cavalo, vaca) e por fase de vida
+(filhote, adulto, sênior, castrado), além de registrar movimentações de
+entrada e saída de estoque.
 
-## Getting Started
+## Stack
 
-First, run the development server:
+- **Backend:** Python + FastAPI + SQLAlchemy
+- **Banco de dados:** SQLite (via SQLAlchemy, arquivo `backend/loja.db`)
+- **Frontend:** JavaScript + React + Vite
+
+## Como rodar
+
+### Backend
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd backend
+python -m venv .venv
+.venv\Scripts\activate   # Windows
+pip install -r requirements.txt
+uvicorn app.main:app --reload
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+API disponível em `http://localhost:8000` (docs em `/docs`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Frontend
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## Learn More
+Aplicação disponível em `http://localhost:5173`.
 
-To learn more about Next.js, take a look at the following resources:
+## Estrutura
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```text
+backend/
+  app/
+    models.py       # Marca, Produto (Ração), Movimentação
+    schemas.py       # Schemas Pydantic
+    routers/          # Rotas CRUD (marcas, produtos,movimentacoes)
+    main.py           # App FastAPI + seed de marcas
+frontend/
+  src/
+    pages/            # Estoque, Nova Ração, Marcas
+    api/client.js      # Cliente HTTP da API
+```
