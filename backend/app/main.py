@@ -1,5 +1,3 @@
-import os
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -11,12 +9,8 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Produsul Cereais - Controle de Estoque")
 
-frontend_url = os.getenv("FRONTEND_URL")
-origins_producao = [frontend_url] if frontend_url else []
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins_producao,
     allow_origin_regex=r"http://(localhost|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):5173",
     allow_methods=["*"],
     allow_headers=["*"],
