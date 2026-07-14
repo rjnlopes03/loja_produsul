@@ -44,7 +44,7 @@ backend/
   app/
     models.py       # Marca, Produto (Ração), Movimentação
     schemas.py       # Schemas Pydantic
-    routers/          # Rotas CRUD (marcas, produtos,movimentacoes)
+    routers/          # Rotas CRUD (marcas, produtos, movimentacoes)
     main.py           # App FastAPI + seed de marcas
 frontend/
   src/
