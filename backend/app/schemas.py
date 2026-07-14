@@ -24,6 +24,7 @@ class ProdutoBase(BaseModel):
     marca_id: int
     especie: Especie
     fase_vida: FaseVida
+    castrado: Optional[bool] = None
     peso_kg: float
     preco: float
     quantidade_estoque: int = 0
@@ -38,6 +39,7 @@ class ProdutoUpdate(BaseModel):
     marca_id: Optional[int] = None
     especie: Optional[Especie] = None
     fase_vida: Optional[FaseVida] = None
+    castrado: Optional[bool] = None
     peso_kg: Optional[float] = None
     preco: Optional[float] = None
     quantidade_estoque: Optional[int] = None

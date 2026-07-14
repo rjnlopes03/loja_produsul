@@ -13,6 +13,7 @@ router = APIRouter(prefix="/produtos", tags=["produtos"])
 def listar_produtos(
     especie: Optional[models.Especie] = None,
     fase_vida: Optional[models.FaseVida] = None,
+    castrado: Optional[bool] = None,
     marca_id: Optional[int] = None,
     db: Session = Depends(get_db),
 ):
@@ -21,6 +22,8 @@ def listar_produtos(
         query = query.filter(models.Produto.especie == especie)
     if fase_vida:
         query = query.filter(models.Produto.fase_vida == fase_vida)
+    if castrado is not None:
+        query = query.filter(models.Produto.castrado == castrado)
     if marca_id:
         query = query.filter(models.Produto.marca_id == marca_id)
     return query.order_by(models.Produto.nome).all()

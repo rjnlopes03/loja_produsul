@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Column, Integer, String, Float, Enum, ForeignKey, DateTime, func
+from sqlalchemy import Column, Integer, String, Float, Boolean, Enum, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -19,7 +19,6 @@ class FaseVida(str, enum.Enum):
     FILHOTE = "filhote"
     ADULTO = "adulto"
     SENIOR = "senior"
-    CASTRADO = "castrado"
 
 
 class Marca(Base):
@@ -39,6 +38,7 @@ class Produto(Base):
     marca_id = Column(Integer, ForeignKey("marcas.id"), nullable=False)
     especie = Column(Enum(Especie), nullable=False)
     fase_vida = Column(Enum(FaseVida), nullable=False)
+    castrado = Column(Boolean, nullable=True)
     peso_kg = Column(Float, nullable=False)
     preco = Column(Float, nullable=False)
     quantidade_estoque = Column(Integer, nullable=False, default=0)
