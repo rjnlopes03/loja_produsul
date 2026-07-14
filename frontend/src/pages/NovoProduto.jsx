@@ -8,6 +8,7 @@ const vazio = {
   marca_id: "",
   especie: "",
   fase_vida: "",
+  castrado: "",
   peso_kg: "",
   preco: "",
   quantidade_estoque: 0,
@@ -36,6 +37,7 @@ export default function NovoProduto() {
             marca_id: produto.marca_id,
             especie: produto.especie,
             fase_vida: produto.fase_vida,
+            castrado: produto.castrado === null || produto.castrado === undefined ? "" : String(produto.castrado),
             peso_kg: produto.peso_kg,
             preco: produto.preco,
             quantidade_estoque: produto.quantidade_estoque,
@@ -46,7 +48,13 @@ export default function NovoProduto() {
   }, [editando, id]);
 
   function atualizarCampo(campo, valor) {
-    setForm((f) => ({ ...f, [campo]: valor }));
+    setForm((f) => {
+      const novo = { ...f, [campo]: valor };
+      if (campo === "especie" && valor !== "gato") {
+        novo.castrado = "";
+      }
+      return novo;
+    });
   }
 
   async function salvar(e) {
@@ -55,6 +63,7 @@ export default function NovoProduto() {
     const payload = {
       ...form,
       marca_id: Number(form.marca_id),
+      castrado: form.especie === "gato" && form.castrado !== "" ? form.castrado === "true" : null,
       peso_kg: Number(form.peso_kg),
       preco: Number(form.preco),
       quantidade_estoque: Number(form.quantidade_estoque),
@@ -132,6 +141,20 @@ export default function NovoProduto() {
             ))}
           </select>
         </label>
+
+        {form.especie === "gato" && (
+          <label>
+            Castrado
+            <select
+              value={form.castrado}
+              onChange={(e) => atualizarCampo("castrado", e.target.value)}
+            >
+              <option value="">Não especificado</option>
+              <option value="true">Castrado</option>
+              <option value="false">Não castrado</option>
+            </select>
+          </label>
+        )}
 
         <label>
           Peso (kg)

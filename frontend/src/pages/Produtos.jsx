@@ -86,7 +86,12 @@ export default function Produtos() {
                 <td>{p.nome}</td>
                 <td>{p.marca.nome}</td>
                 <td className="capitalize">{p.especie}</td>
-                <td className="capitalize">{p.fase_vida}</td>
+                <td className="capitalize">
+                  {p.fase_vida}
+                  {p.especie === "gato" && p.castrado !== null && p.castrado !== undefined
+                    ? ` · ${p.castrado ? "castrado" : "não castrado"}`
+                    : ""}
+                </td>
                 <td>{p.peso_kg}</td>
                 <td>R$ {p.preco.toFixed(2)}</td>
                 <td className={p.quantidade_estoque <= 5 ? "estoque-baixo" : ""}>
