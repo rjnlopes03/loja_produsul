@@ -39,9 +39,12 @@ Write-Host "Frontend: http://localhost:5173" -ForegroundColor Green
 Write-Host "Pressione Ctrl+C para encerrar os dois." -ForegroundColor Cyan
 Write-Host ""
 
+$ErrorActionPreference = "Continue"
+
 try {
     while ($true) {
-        Receive-Job -Job $backendJob, $frontendJob
+        Receive-Job -Job $backendJob, $frontendJob -ErrorAction SilentlyContinue -ErrorVariable jobErrors
+        foreach ($e in $jobErrors) { Write-Host $e }
         Start-Sleep -Milliseconds 300
     }
 }
