@@ -24,7 +24,7 @@ if (-not (Test-Path (Join-Path $root "frontend\node_modules"))) {
 $backendJob = Start-Job -Name backend -ScriptBlock {
     param($root, $venvPython)
     Set-Location (Join-Path $root "backend")
-    & $venvPython -m uvicorn app.main:app --reload
+    & $venvPython -m uvicorn app.main:app --reload --host 0.0.0.0
 } -ArgumentList $root, $venvPython
 
 $frontendJob = Start-Job -Name frontend -ScriptBlock {
@@ -33,9 +33,17 @@ $frontendJob = Start-Job -Name frontend -ScriptBlock {
     npm run dev
 } -ArgumentList $root
 
+$ipLocal = (Get-NetIPAddress -AddressFamily IPv4 -PrefixOrigin Dhcp, Manual -ErrorAction SilentlyContinue |
+    Where-Object { $_.IPAddress -notlike "169.254.*" } | Select-Object -First 1 -ExpandProperty IPAddress)
+
 Write-Host ""
 Write-Host "Backend:  http://localhost:8000 (docs em /docs)" -ForegroundColor Green
 Write-Host "Frontend: http://localhost:5173" -ForegroundColor Green
+if ($ipLocal) {
+    Write-Host ""
+    Write-Host "Acesso pela rede local (outros dispositivos no mesmo Wi-Fi):" -ForegroundColor Green
+    Write-Host "  http://${ipLocal}:5173" -ForegroundColor Green
+}
 Write-Host "Pressione Ctrl+C para encerrar os dois." -ForegroundColor Cyan
 Write-Host ""
 
