@@ -33,13 +33,7 @@ export default function Produtos() {
   }, [filtros]);
 
   function atualizarFiltro(campo, valor) {
-    setFiltros((f) => {
-      const novo = { ...f, [campo]: valor };
-      if (campo === "especie" && valor !== "gato") {
-        novo.castrado = "";
-      }
-      return novo;
-    });
+    setFiltros((f) => ({ ...f, [campo]: valor }));
   }
 
   async function excluir(id) {
@@ -93,16 +87,14 @@ export default function Produtos() {
           ))}
         </select>
 
-        {filtros.especie === "gato" && (
-          <select
-            value={filtros.castrado}
-            onChange={(e) => atualizarFiltro("castrado", e.target.value)}
-          >
-            <option value="">Castrados e não castrados</option>
-            <option value="true">Castrado</option>
-            <option value="false">Não castrado</option>
-          </select>
-        )}
+        <select
+          value={filtros.castrado}
+          onChange={(e) => atualizarFiltro("castrado", e.target.value)}
+        >
+          <option value="">Castrado (todos)</option>
+          <option value="true">Sim</option>
+          <option value="false">Não</option>
+        </select>
       </div>
 
       {erro && <p className="erro">{erro}</p>}
