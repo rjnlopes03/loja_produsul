@@ -4,7 +4,7 @@ Sistema de controle de estoque de rações da Produsul Cereais.
 
 Permite cadastrar, editar, remover e filtrar rações por espécie de animal
 (cachorro, gato, coelho, galinha, cavalo, vaca) e por fase de vida
-(filhote, adulto, sênior, castrado), além de registrar movimentações de
+(filhote, adulto, sênior), além de registrar movimentações de
 entrada e saída de estoque.
 
 ## Stack
@@ -26,6 +26,18 @@ uvicorn app.main:app --reload
 ```
 
 API disponível em `http://localhost:8000` (docs em `/docs`).
+
+#### Migrations (Alembic)
+
+Mudanças de schema em `app/models.py` devem ser acompanhadas de uma migration:
+
+```bash
+cd backend
+alembic revision --autogenerate -m "descrição da mudança"
+alembic upgrade head
+```
+
+Em um checkout novo (banco ainda não existe), rode `alembic upgrade head` para criar o schema.
 
 ### Frontend
 

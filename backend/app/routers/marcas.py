@@ -25,8 +25,10 @@ def criar_marca(marca: schemas.MarcaCreate, db: Session = Depends(get_db)):
 
 @router.delete("/{marca_id}", status_code=204)
 def excluir_marca(marca_id: int, db: Session = Depends(get_db)):
-    db_marca = db.query(models.Marca).get(marca_id)
+    db_marca = db.get(models.Marca, marca_id)
     if not db_marca:
         raise HTTPException(status_code=404, detail="Marca não encontrada")
+    if db.query(models.Produto).filter(models.Produto.marca_id == marca_id).count() > 0:
+        raise HTTPException(status_code=400, detail="Não é possível excluir: existem produtos cadastrados com esta marca")
     db.delete(db_marca)
     db.commit()
