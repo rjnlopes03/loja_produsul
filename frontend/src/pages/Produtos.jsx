@@ -29,8 +29,12 @@ export default function Produtos() {
 
   async function excluir(id) {
     if (!confirm("Excluir esta ração do estoque?")) return;
-    await api.excluirProduto(id);
-    carregar();
+    try {
+      await api.excluirProduto(id);
+      carregar();
+    } catch (e) {
+      setErro(e.message);
+    }
   }
 
   return (
