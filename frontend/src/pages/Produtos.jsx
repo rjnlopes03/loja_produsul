@@ -5,7 +5,8 @@ import { ESPECIES, FASES_VIDA } from "../constants.js";
 
 export default function Produtos() {
   const [produtos, setProdutos] = useState([]);
-  const [filtros, setFiltros] = useState({ especie: "", fase_vida: "" });
+  const [marcas, setMarcas] = useState([]);
+  const [filtros, setFiltros] = useState({ especie: "", fase_vida: "", marca_id: "", castrado: "" });
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
@@ -23,9 +24,23 @@ export default function Produtos() {
   }
 
   useEffect(() => {
+    api.listarMarcas().then(setMarcas).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     carregar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtros]);
+
+  function atualizarFiltro(campo, valor) {
+    setFiltros((f) => {
+      const novo = { ...f, [campo]: valor };
+      if (campo === "especie" && valor !== "gato") {
+        novo.castrado = "";
+      }
+      return novo;
+    });
+  }
 
   async function excluir(id) {
     if (!confirm("Excluir esta ração do estoque?")) return;
@@ -44,7 +59,7 @@ export default function Produtos() {
       <div className="filtros">
         <select
           value={filtros.especie}
-          onChange={(e) => setFiltros((f) => ({ ...f, especie: e.target.value }))}
+          onChange={(e) => atualizarFiltro("especie", e.target.value)}
         >
           <option value="">Todos os animais</option>
           {ESPECIES.map((op) => (
@@ -56,7 +71,7 @@ export default function Produtos() {
 
         <select
           value={filtros.fase_vida}
-          onChange={(e) => setFiltros((f) => ({ ...f, fase_vida: e.target.value }))}
+          onChange={(e) => atualizarFiltro("fase_vida", e.target.value)}
         >
           <option value="">Todas as fases</option>
           {FASES_VIDA.map((op) => (
@@ -65,6 +80,29 @@ export default function Produtos() {
             </option>
           ))}
         </select>
+
+        <select
+          value={filtros.marca_id}
+          onChange={(e) => atualizarFiltro("marca_id", e.target.value)}
+        >
+          <option value="">Todas as marcas</option>
+          {marcas.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.nome}
+            </option>
+          ))}
+        </select>
+
+        {filtros.especie === "gato" && (
+          <select
+            value={filtros.castrado}
+            onChange={(e) => atualizarFiltro("castrado", e.target.value)}
+          >
+            <option value="">Castrados e não castrados</option>
+            <option value="true">Castrado</option>
+            <option value="false">Não castrado</option>
+          </select>
+        )}
       </div>
 
       {erro && <p className="erro">{erro}</p>}
