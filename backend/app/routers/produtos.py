@@ -19,7 +19,12 @@ def listar_produtos(
 ):
     query = db.query(models.Produto).options(joinedload(models.Produto.marca))
     if especie:
-        query = query.filter(models.Produto.especie == especie)
+        if especie == models.Especie.MULTIESPECIE:
+            query = query.filter(models.Produto.especie == especie)
+        else:
+            query = query.filter(
+                models.Produto.especie.in_([especie, models.Especie.MULTIESPECIE])
+            )
     if fase_vida:
         query = query.filter(models.Produto.fase_vida == fase_vida)
     if castrado is not None:

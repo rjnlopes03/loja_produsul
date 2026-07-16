@@ -13,6 +13,7 @@ class Especie(str, enum.Enum):
     GALINHA = "galinha"
     CAVALO = "cavalo"
     VACA = "vaca"
+    MULTIESPECIE = "multiespecie"
 
 
 class FaseVida(str, enum.Enum):
