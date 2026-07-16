@@ -31,7 +31,7 @@ def listar_produtos(
 
 @router.get("/{produto_id}", response_model=schemas.Produto)
 def obter_produto(produto_id: int, db: Session = Depends(get_db)):
-    produto = db.query(models.Produto).options(joinedload(models.Produto.marca)).get(produto_id)
+    produto = db.query(models.Produto).options(joinedload(models.Produto.marca)).filter(models.Produto.id == produto_id).first()
     if not produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
     return produto
@@ -39,7 +39,7 @@ def obter_produto(produto_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=schemas.Produto, status_code=201)
 def criar_produto(produto: schemas.ProdutoCreate, db: Session = Depends(get_db)):
-    if not db.query(models.Marca).get(produto.marca_id):
+    if not db.get(models.Marca, produto.marca_id):
         raise HTTPException(status_code=400, detail="Marca inválida")
     db_produto = models.Produto(**produto.model_dump())
     db.add(db_produto)
@@ -50,7 +50,7 @@ def criar_produto(produto: schemas.ProdutoCreate, db: Session = Depends(get_db))
 
 @router.put("/{produto_id}", response_model=schemas.Produto)
 def atualizar_produto(produto_id: int, produto: schemas.ProdutoUpdate, db: Session = Depends(get_db)):
-    db_produto = db.query(models.Produto).get(produto_id)
+    db_produto = db.get(models.Produto, produto_id)
     if not db_produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
     for campo, valor in produto.model_dump(exclude_unset=True).items():
@@ -62,7 +62,7 @@ def atualizar_produto(produto_id: int, produto: schemas.ProdutoUpdate, db: Sessi
 
 @router.delete("/{produto_id}", status_code=204)
 def excluir_produto(produto_id: int, db: Session = Depends(get_db)):
-    db_produto = db.query(models.Produto).get(produto_id)
+    db_produto = db.get(models.Produto, produto_id)
     if not db_produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
     db.delete(db_produto)

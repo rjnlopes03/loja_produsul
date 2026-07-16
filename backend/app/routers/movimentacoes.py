@@ -14,7 +14,7 @@ def listar_movimentacoes(db: Session = Depends(get_db)):
 
 @router.post("/", response_model=schemas.Movimentacao, status_code=201)
 def criar_movimentacao(mov: schemas.MovimentacaoCreate, db: Session = Depends(get_db)):
-    produto = db.query(models.Produto).get(mov.produto_id)
+    produto = db.get(models.Produto, mov.produto_id)
     if not produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
 
