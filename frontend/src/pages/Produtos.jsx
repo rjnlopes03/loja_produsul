@@ -116,6 +116,7 @@ export default function Produtos() {
               <th>Marca</th>
               <th>Animal</th>
               <th>Fase</th>
+              <th>Castrado</th>
               <th>Peso (kg)</th>
               <th>Preço</th>
               <th>Estoque</th>
@@ -128,11 +129,11 @@ export default function Produtos() {
                 <td>{p.nome}</td>
                 <td>{p.marca.nome}</td>
                 <td className="capitalize">{p.especie}</td>
-                <td className="capitalize">
-                  {p.fase_vida}
+                <td className="capitalize">{p.fase_vida}</td>
+                <td>
                   {p.especie === "gato" && p.castrado !== null && p.castrado !== undefined
-                    ? ` · ${p.castrado ? "castrado" : "não castrado"}`
-                    : ""}
+                    ? (p.castrado ? "Sim" : "Não")
+                    : "—"}
                 </td>
                 <td>{p.peso_kg}</td>
                 <td>R$ {p.preco.toFixed(2)}</td>
@@ -147,7 +148,7 @@ export default function Produtos() {
             ))}
             {produtos.length === 0 && (
               <tr>
-                <td colSpan={8}>Nenhuma ração encontrada.</td>
+                <td colSpan={9}>Nenhuma ração encontrada.</td>
               </tr>
             )}
           </tbody>
