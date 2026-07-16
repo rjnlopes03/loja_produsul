@@ -54,7 +54,10 @@ export default function Produtos() {
 
   return (
     <div>
-      <h2>Estoque de Rações</h2>
+      <div className="page-header">
+        <h2>Estoque de Rações</h2>
+        <p>Acompanhe o saldo e os dados de cada ração cadastrada.</p>
+      </div>
 
       <div className="filtros">
         <select
@@ -107,52 +110,68 @@ export default function Produtos() {
 
       {erro && <p className="erro">{erro}</p>}
       {carregando ? (
-        <p>Carregando...</p>
+        <p className="carregando">Carregando...</p>
       ) : (
-        <table className="tabela">
-          <thead>
-            <tr>
-              <th>Ração</th>
-              <th>Marca</th>
-              <th>Animal</th>
-              <th>Fase</th>
-              <th>Castrado</th>
-              <th>Peso (kg)</th>
-              <th>Preço</th>
-              <th>Estoque</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {produtos.map((p) => (
-              <tr key={p.id}>
-                <td>{p.nome}</td>
-                <td>{p.marca.nome}</td>
-                <td className="capitalize">{p.especie}</td>
-                <td className="capitalize">{p.fase_vida}</td>
-                <td>
-                  {p.especie === "gato" && p.castrado !== null && p.castrado !== undefined
-                    ? (p.castrado ? "Sim" : "Não")
-                    : "—"}
-                </td>
-                <td>{p.peso_kg}</td>
-                <td>R$ {p.preco.toFixed(2)}</td>
-                <td className={p.quantidade_estoque <= 5 ? "estoque-baixo" : ""}>
-                  {p.quantidade_estoque}
-                </td>
-                <td className="acoes">
-                  <Link to={`/produtos/${p.id}/editar`}>Editar</Link>
-                  <button onClick={() => excluir(p.id)}>Excluir</button>
-                </td>
-              </tr>
-            ))}
-            {produtos.length === 0 && (
+        <div className="tabela-wrap">
+          <table className="tabela">
+            <thead>
               <tr>
-                <td colSpan={9}>Nenhuma ração encontrada.</td>
+                <th>Ração</th>
+                <th>Marca</th>
+                <th>Animal</th>
+                <th>Fase</th>
+                <th>Castrado</th>
+                <th>Peso (kg)</th>
+                <th>Preço</th>
+                <th>Estoque</th>
+                <th></th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {produtos.map((p) => (
+                <tr key={p.id}>
+                  <td className="nome-produto">{p.nome}</td>
+                  <td>{p.marca.nome}</td>
+                  <td className="capitalize">{p.especie}</td>
+                  <td className="capitalize">{p.fase_vida}</td>
+                  <td>
+                    {p.especie === "gato" && p.castrado !== null && p.castrado !== undefined ? (
+                      <span className={`badge ${p.castrado ? "badge-ok" : "badge-muted"}`}>
+                        {p.castrado ? "Sim" : "Não"}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td>{p.peso_kg}</td>
+                  <td>R$ {p.preco.toFixed(2)}</td>
+                  <td>
+                    {p.quantidade_estoque <= 5 ? (
+                      <span className="badge badge-danger">{p.quantidade_estoque} un.</span>
+                    ) : (
+                      <span className="badge badge-gold">{p.quantidade_estoque} un.</span>
+                    )}
+                  </td>
+                  <td className="acoes">
+                    <Link className="link-editar" to={`/produtos/${p.id}/editar`}>
+                      Editar
+                    </Link>
+                    <button className="btn-danger" onClick={() => excluir(p.id)}>
+                      Excluir
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {produtos.length === 0 && (
+                <tr>
+                  <td className="vazio" colSpan={9}>
+                    Nenhuma ração encontrada.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

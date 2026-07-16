@@ -82,7 +82,10 @@ export default function NovoProduto() {
 
   return (
     <div>
-      <h2>{editando ? "Editar Ração" : "Cadastrar Nova Ração"}</h2>
+      <div className="page-header">
+        <h2>{editando ? "Editar Ração" : "Cadastrar Nova Ração"}</h2>
+        <p>{editando ? "Atualize os dados desta ração." : "Preencha os dados para adicionar uma ração ao estoque."}</p>
+      </div>
 
       <form className="form" onSubmit={salvar}>
         <label>
