@@ -36,7 +36,14 @@ export default function Marcas() {
 
   return (
     <div>
-      <h2>Marcas</h2>
+      <div className="hero">
+        <div className="hero-top">
+          <div>
+            <h2>Marcas</h2>
+            <p>Gerencie as marcas de ração disponíveis para cadastro.</p>
+          </div>
+        </div>
+      </div>
 
       <form className="form-inline" onSubmit={adicionar}>
         <input
@@ -45,7 +52,9 @@ export default function Marcas() {
           onChange={(e) => setNome(e.target.value)}
           required
         />
-        <button type="submit">Adicionar</button>
+        <button className="btn-primary" type="submit">
+          Adicionar
+        </button>
       </form>
 
       {erro && <p className="erro">{erro}</p>}
@@ -54,7 +63,9 @@ export default function Marcas() {
         {marcas.map((m) => (
           <li key={m.id}>
             {m.nome}
-            <button onClick={() => excluir(m.id)}>Excluir</button>
+            <button className="btn-danger" onClick={() => excluir(m.id)}>
+              Excluir
+            </button>
           </li>
         ))}
       </ul>
