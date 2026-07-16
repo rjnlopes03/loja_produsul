@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from .models import Especie, FaseVida, TipoMovimentacao
 
@@ -55,7 +55,7 @@ class Produto(ProdutoBase):
 class MovimentacaoCreate(BaseModel):
     produto_id: int
     tipo: TipoMovimentacao
-    quantidade: int
+    quantidade: int = Field(gt=0)
 
 
 class Movimentacao(MovimentacaoCreate):
