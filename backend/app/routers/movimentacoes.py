@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from .. import models, schemas
 from ..database import get_db
@@ -9,7 +9,12 @@ router = APIRouter(prefix="/movimentacoes", tags=["movimentacoes"])
 
 @router.get("/", response_model=list[schemas.Movimentacao])
 def listar_movimentacoes(db: Session = Depends(get_db)):
-    return db.query(models.Movimentacao).order_by(models.Movimentacao.criado_em.desc()).all()
+    return (
+        db.query(models.Movimentacao)
+        .options(joinedload(models.Movimentacao.produto).joinedload(models.Produto.marca))
+        .order_by(models.Movimentacao.criado_em.desc())
+        .all()
+    )
 
 
 @router.post("/", response_model=schemas.Movimentacao, status_code=201)

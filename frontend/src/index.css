@@ -234,6 +234,19 @@ h3 {
   max-width: 42ch;
 }
 
+.hero-voltar {
+  display: inline-block;
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.hero-voltar:hover {
+  color: #fff;
+}
+
 .hero-stats {
   position: relative;
   display: flex;
@@ -262,6 +275,9 @@ h3 {
   background: rgba(255, 255, 255, 0.14);
   flex-shrink: 0;
   color: #fff;
+  font-family: "Manrope", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 800;
 }
 
 .stat-chip .stat-icon svg {
@@ -387,12 +403,42 @@ select.filtro-select:focus {
 
 /* ---------- tabela ---------- */
 
+.tabela-espacada {
+  margin-top: 1.5rem;
+}
+
+.duas-colunas {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.duas-colunas .form {
+  flex: 1;
+  min-width: 280px;
+}
+
+.duas-colunas .form > strong {
+  font-family: "Manrope", sans-serif;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.subtitulo {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--brand-800);
+  margin: 0 0 0.75rem;
+}
+
 .tabela-wrap {
   background: var(--surface);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  margin-bottom: 1.5rem;
 }
 
 .tabela {
@@ -433,6 +479,16 @@ select.filtro-select:focus {
 .tabela td.nome-produto {
   font-weight: 700;
   color: var(--text);
+}
+
+.link-nome {
+  color: var(--brand-700);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.link-nome:hover {
+  text-decoration: underline;
 }
 
 .especie-cell {
