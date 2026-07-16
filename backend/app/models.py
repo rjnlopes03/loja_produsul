@@ -63,3 +63,43 @@ class Movimentacao(Base):
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
 
     produto = relationship("Produto", back_populates="movimentacoes")
+
+
+class Cliente(Base):
+    __tablename__ = "clientes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String, unique=True, nullable=False)
+    criado_em = Column(DateTime(timezone=True), server_default=func.now())
+
+    compras = relationship("Compra", back_populates="cliente")
+    pagamentos = relationship("Pagamento", back_populates="cliente")
+
+
+class Compra(Base):
+    __tablename__ = "compras"
+
+    id = Column(Integer, primary_key=True, index=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False)
+    produto_id = Column(Integer, ForeignKey("produtos.id"), nullable=False)
+    quantidade = Column(Integer, nullable=False)
+    preco_unitario = Column(Float, nullable=False)
+    criado_em = Column(DateTime(timezone=True), server_default=func.now())
+
+    cliente = relationship("Cliente", back_populates="compras")
+    produto = relationship("Produto")
+
+    @property
+    def valor_total(self):
+        return self.preco_unitario * self.quantidade
+
+
+class Pagamento(Base):
+    __tablename__ = "pagamentos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False)
+    valor = Column(Float, nullable=False)
+    criado_em = Column(DateTime(timezone=True), server_default=func.now())
+
+    cliente = relationship("Cliente", back_populates="pagamentos")

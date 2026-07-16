@@ -2,6 +2,9 @@ import { Routes, Route, NavLink } from "react-router-dom";
 import Produtos from "./pages/Produtos.jsx";
 import NovoProduto from "./pages/NovoProduto.jsx";
 import Marcas from "./pages/Marcas.jsx";
+import Movimentacoes from "./pages/Movimentacoes.jsx";
+import Clientes from "./pages/Clientes.jsx";
+import ClienteDetalhe from "./pages/ClienteDetalhe.jsx";
 
 function IconEstoque() {
   return (
@@ -30,6 +33,25 @@ function IconMarcas() {
   );
 }
 
+function IconMovimentacoes() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 3v12M13 11l4 4 4-4" />
+      <path d="M7 21V9M3 13l4-4 4 4" />
+    </svg>
+  );
+}
+
+function IconClientes() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
 function App() {
   return (
     <div className="app">
@@ -52,6 +74,14 @@ function App() {
               <IconNovo />
               Nova Ração
             </NavLink>
+            <NavLink to="/movimentacoes">
+              <IconMovimentacoes />
+              Movimentações
+            </NavLink>
+            <NavLink to="/clientes">
+              <IconClientes />
+              Clientes
+            </NavLink>
             <NavLink to="/marcas">
               <IconMarcas />
               Marcas
@@ -68,6 +98,9 @@ function App() {
             <Route path="/" element={<Produtos />} />
             <Route path="/produtos/novo" element={<NovoProduto />} />
             <Route path="/produtos/:id/editar" element={<NovoProduto />} />
+            <Route path="/movimentacoes" element={<Movimentacoes />} />
+            <Route path="/clientes" element={<Clientes />} />
+            <Route path="/clientes/:id" element={<ClienteDetalhe />} />
             <Route path="/marcas" element={<Marcas />} />
           </Routes>
         </div>

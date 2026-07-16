@@ -62,3 +62,60 @@ class Movimentacao(MovimentacaoCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
     criado_em: datetime
+    produto: Produto
+
+
+class ClienteBase(BaseModel):
+    nome: str
+
+
+class ClienteCreate(ClienteBase):
+    pass
+
+
+class Cliente(ClienteBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    criado_em: datetime
+
+
+class ClienteComSaldo(Cliente):
+    saldo_devedor: float
+
+
+class CompraCreate(BaseModel):
+    produto_id: int
+    quantidade: int = Field(gt=0)
+
+
+class Compra(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    cliente_id: int
+    produto_id: int
+    quantidade: int
+    preco_unitario: float
+    valor_total: float
+    criado_em: datetime
+    produto: Produto
+
+
+class PagamentoCreate(BaseModel):
+    valor: float = Field(gt=0)
+
+
+class Pagamento(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    cliente_id: int
+    valor: float
+    criado_em: datetime
+
+
+class ClienteResumo(BaseModel):
+    cliente: Cliente
+    compras: list[Compra]
+    pagamentos: list[Pagamento]
+    total_compras: float
+    total_pagamentos: float
+    saldo_devedor: float

@@ -32,4 +32,13 @@ export const api = {
 
   listarMovimentacoes: () => request("/movimentacoes/"),
   criarMovimentacao: (mov) => request("/movimentacoes/", { method: "POST", body: JSON.stringify(mov) }),
+
+  listarClientes: () => request("/clientes/"),
+  criarCliente: (nome) => request("/clientes/", { method: "POST", body: JSON.stringify({ nome }) }),
+  excluirCliente: (id) => request(`/clientes/${id}`, { method: "DELETE" }),
+  obterResumoCliente: (id) => request(`/clientes/${id}/resumo`),
+  criarCompra: (clienteId, compra) =>
+    request(`/clientes/${clienteId}/compras`, { method: "POST", body: JSON.stringify(compra) }),
+  criarPagamento: (clienteId, pagamento) =>
+    request(`/clientes/${clienteId}/pagamentos`, { method: "POST", body: JSON.stringify(pagamento) }),
 };

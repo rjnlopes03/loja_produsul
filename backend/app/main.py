@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import models
 from .database import engine, SessionLocal
-from .routers import marcas, produtos, movimentacoes
+from .routers import marcas, produtos, movimentacoes, clientes
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -19,6 +19,7 @@ app.add_middleware(
 app.include_router(marcas.router)
 app.include_router(produtos.router)
 app.include_router(movimentacoes.router)
+app.include_router(clientes.router)
 
 
 @app.on_event("startup")
