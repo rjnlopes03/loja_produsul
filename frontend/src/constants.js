@@ -11,5 +11,4 @@ export const FASES_VIDA = [
   { value: "filhote", label: "Filhote" },
   { value: "adulto", label: "Adulto" },
   { value: "senior", label: "Sênior" },
-  { value: "castrado", label: "Castrado" },
 ];
