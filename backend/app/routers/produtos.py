@@ -26,7 +26,12 @@ def listar_produtos(
                 models.Produto.especie.in_([especie, models.Especie.MULTIESPECIE])
             )
     if fase_vida:
-        query = query.filter(models.Produto.fase_vida == fase_vida)
+        if fase_vida == models.FaseVida.QUALQUER:
+            query = query.filter(models.Produto.fase_vida == fase_vida)
+        else:
+            query = query.filter(
+                models.Produto.fase_vida.in_([fase_vida, models.FaseVida.QUALQUER])
+            )
     if castrado is not None:
         query = query.filter(models.Produto.castrado == castrado)
     if marca_id:

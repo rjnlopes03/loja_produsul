@@ -12,6 +12,7 @@ export const FASES_VIDA = [
   { value: "filhote", label: "Filhote" },
   { value: "adulto", label: "Adulto" },
   { value: "senior", label: "Sênior" },
+  { value: "qualquer", label: "Qualquer fase" },
 ];
 
 export const ESPECIE_COR = {

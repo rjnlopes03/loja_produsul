@@ -20,6 +20,7 @@ class FaseVida(str, enum.Enum):
     FILHOTE = "filhote"
     ADULTO = "adulto"
     SENIOR = "senior"
+    QUALQUER = "qualquer"
 
 
 class Marca(Base):
