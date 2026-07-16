@@ -33,32 +33,34 @@ function IconMarcas() {
 function App() {
   return (
     <div className="app">
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-mark">🌾</div>
-          <div className="brand-text">
-            <strong>Produsul</strong>
-            <span>Cereais</span>
+      <header className="topbar">
+        <div className="topbar-inner">
+          <div className="brand">
+            <div className="brand-mark">P</div>
+            <div className="brand-text">
+              <strong>Produsul</strong>
+              <span>Cereais</span>
+            </div>
           </div>
+
+          <nav>
+            <NavLink to="/" end>
+              <IconEstoque />
+              Estoque
+            </NavLink>
+            <NavLink to="/produtos/novo">
+              <IconNovo />
+              Nova Ração
+            </NavLink>
+            <NavLink to="/marcas">
+              <IconMarcas />
+              Marcas
+            </NavLink>
+          </nav>
+
+          <span className="topbar-tag">Controle de estoque interno</span>
         </div>
-
-        <nav>
-          <NavLink to="/" end>
-            <IconEstoque />
-            Estoque
-          </NavLink>
-          <NavLink to="/produtos/novo">
-            <IconNovo />
-            Nova Ração
-          </NavLink>
-          <NavLink to="/marcas">
-            <IconMarcas />
-            Marcas
-          </NavLink>
-        </nav>
-
-        <div className="sidebar-footer">Controle de estoque interno · Produsul Cereais</div>
-      </aside>
+      </header>
 
       <main className="main">
         <div className="content">

@@ -36,9 +36,13 @@ export default function Marcas() {
 
   return (
     <div>
-      <div className="page-header">
-        <h2>Marcas</h2>
-        <p>Gerencie as marcas de ração disponíveis para cadastro.</p>
+      <div className="hero">
+        <div className="hero-top">
+          <div>
+            <h2>Marcas</h2>
+            <p>Gerencie as marcas de ração disponíveis para cadastro.</p>
+          </div>
+        </div>
       </div>
 
       <form className="form-inline" onSubmit={adicionar}>
