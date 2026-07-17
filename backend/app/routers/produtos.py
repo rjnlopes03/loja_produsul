@@ -75,5 +75,11 @@ def excluir_produto(produto_id: int, db: Session = Depends(get_db)):
     db_produto = db.get(models.Produto, produto_id)
     if not db_produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
+    tem_compras = db.query(models.Compra).filter(models.Compra.produto_id == produto_id).count() > 0
+    if tem_compras:
+        raise HTTPException(status_code=400, detail="Não é possível excluir: produto possui compras de cliente registradas")
+    tem_movimentacoes = db.query(models.Movimentacao).filter(models.Movimentacao.produto_id == produto_id).count() > 0
+    if tem_movimentacoes:
+        raise HTTPException(status_code=400, detail="Não é possível excluir: produto possui movimentações de estoque registradas")
     db.delete(db_produto)
     db.commit()
