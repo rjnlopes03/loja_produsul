@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from .. import models, schemas
@@ -38,7 +39,11 @@ def criar_cliente(cliente: schemas.ClienteCreate, db: Session = Depends(get_db))
         raise HTTPException(status_code=400, detail="Cliente já cadastrado")
     db_cliente = models.Cliente(**cliente.model_dump())
     db.add(db_cliente)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Cliente já cadastrado")
     db.refresh(db_cliente)
     return db_cliente
 

@@ -74,11 +74,15 @@ export default function ClienteDetalhe() {
           </div>
 
           <div className="hero-stats">
-            <div className={`stat-chip ${saldo_devedor > 0 ? "stat-alert" : ""}`}>
+            <div
+              className={`stat-chip ${
+                saldo_devedor > 0 ? "stat-alert" : saldo_devedor < 0 ? "stat-credit" : ""
+              }`}
+            >
               <div className="stat-icon">R$</div>
               <div>
-                <strong>R$ {saldo_devedor.toFixed(2)}</strong>
-                <span>saldo devedor</span>
+                <strong>R$ {Math.abs(saldo_devedor).toFixed(2)}</strong>
+                <span>{saldo_devedor < 0 ? "crédito do cliente" : "saldo devedor"}</span>
               </div>
             </div>
           </div>
