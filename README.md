@@ -3,9 +3,9 @@
 Sistema de controle de estoque de rações da Produsul Cereais.
 
 Permite cadastrar, editar, remover e filtrar rações por espécie de animal
-(cachorro, gato, coelho, galinha, cavalo, vaca) e por fase de vida
-(filhote, adulto, sênior), além de registrar movimentações de
-entrada e saída de estoque.
+(cachorro, gato, coelho, galinha, cavalo, vaca, multiespécie) e por fase de
+vida (filhote, adulto, sênior, qualquer), além de registrar movimentações de
+entrada e saída de estoque e controlar contas de clientes (fiado mensal).
 
 ## Stack
 
@@ -54,12 +54,12 @@ Aplicação disponível em `http://localhost:5173`.
 ```text
 backend/
   app/
-    models.py       # Marca, Produto (Ração), Movimentação
+    models.py       # Marca, Produto (Ração), Movimentação, Cliente, Compra, Pagamento
     schemas.py       # Schemas Pydantic
-    routers/          # Rotas CRUD (marcas, produtos, movimentacoes)
+    routers/          # Rotas CRUD (marcas, produtos, movimentacoes, clientes)
     main.py           # App FastAPI + seed de marcas
 frontend/
   src/
-    pages/            # Estoque, Nova Ração, Marcas
+    pages/            # Estoque, Nova Ração, Marcas, Movimentacoes, Clientes, ClienteDetalhe
     api/client.js      # Cliente HTTP da API
 ```

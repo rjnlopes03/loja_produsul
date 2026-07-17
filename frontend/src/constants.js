@@ -5,12 +5,14 @@ export const ESPECIES = [
   { value: "galinha", label: "Galinha" },
   { value: "cavalo", label: "Cavalo" },
   { value: "vaca", label: "Vaca" },
+  { value: "multiespecie", label: "Multiespécie" },
 ];
 
 export const FASES_VIDA = [
   { value: "filhote", label: "Filhote" },
   { value: "adulto", label: "Adulto" },
   { value: "senior", label: "Sênior" },
+  { value: "qualquer", label: "Qualquer fase" },
 ];
 
 export const ESPECIE_COR = {
@@ -20,4 +22,5 @@ export const ESPECIE_COR = {
   galinha: { bg: "#fdf3d9", fg: "#a8791a", sigla: "Ga" },
   cavalo: { bg: "#ece3d9", fg: "#6b4a2f", sigla: "Cv" },
   vaca: { bg: "#eceeea", fg: "#52594e", sigla: "V" },
+  multiespecie: { bg: "#e9e4f5", fg: "#4b3a82", sigla: "M" },
 };
