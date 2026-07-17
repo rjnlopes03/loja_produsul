@@ -90,9 +90,13 @@ export default function Clientes() {
                     </Link>
                   </td>
                   <td>
-                    <span className={`badge ${c.saldo_devedor > 0 ? "badge-danger" : "badge-ok"}`}>
-                      R$ {c.saldo_devedor.toFixed(2)}
-                    </span>
+                    {c.saldo_devedor > 0 ? (
+                      <span className="badge badge-danger">R$ {c.saldo_devedor.toFixed(2)}</span>
+                    ) : c.saldo_devedor < 0 ? (
+                      <span className="badge badge-credit">Crédito de R$ {Math.abs(c.saldo_devedor).toFixed(2)}</span>
+                    ) : (
+                      <span className="badge badge-ok">R$ 0.00</span>
+                    )}
                   </td>
                   <td className="acoes">
                     <button className="btn-danger" onClick={() => excluir(c.id)}>
