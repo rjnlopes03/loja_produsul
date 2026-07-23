@@ -7,7 +7,7 @@ export default function Marcas() {
   const [erro, setErro] = useState("");
 
   function carregar() {
-    api.listarMarcas().then(setMarcas);
+    api.listarMarcas().then(setMarcas).catch((e) => setErro(e.message));
   }
 
   useEffect(carregar, []);
