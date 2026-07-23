@@ -1,25 +1,10 @@
 const BASE_URL = `http://${window.location.hostname}:8000`;
 
-let aoDeslogar = () => {};
-
-export function definirAoDeslogar(fn) {
-  aoDeslogar = fn;
-}
-
 async function request(path, options = {}) {
-  const token = localStorage.getItem("token");
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: { "Content-Type": "application/json" },
     ...options,
   });
-  if (res.status === 401 && token) {
-    localStorage.removeItem("token");
-    aoDeslogar();
-    throw new Error("Sessão expirada. Faça login novamente.");
-  }
   if (!res.ok) {
     const erro = await res.json().catch(() => ({}));
     throw new Error(erro.detail || "Erro na requisição");
@@ -29,10 +14,6 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  login: (usuario, senha) =>
-    request("/auth/login", { method: "POST", body: JSON.stringify({ usuario, senha }) }),
-  logout: () => request("/auth/logout", { method: "POST" }),
-
   listarMarcas: () => request("/marcas/"),
   criarMarca: (nome) => request("/marcas/", { method: "POST", body: JSON.stringify({ nome }) }),
   excluirMarca: (id) => request(`/marcas/${id}`, { method: "DELETE" }),

@@ -4,11 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from .. import models, schemas
-from ..auth import exigir_autenticacao
 from ..database import get_db
 from ..validacoes import garantir_sem_referencias
 
-router = APIRouter(prefix="/produtos", tags=["produtos"], dependencies=[Depends(exigir_autenticacao)])
+router = APIRouter(prefix="/produtos", tags=["produtos"])
 
 
 @router.get("/", response_model=list[schemas.Produto])

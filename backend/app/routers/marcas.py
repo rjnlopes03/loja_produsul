@@ -3,11 +3,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
-from ..auth import exigir_autenticacao
 from ..database import get_db
 from ..validacoes import garantir_sem_referencias
 
-router = APIRouter(prefix="/marcas", tags=["marcas"], dependencies=[Depends(exigir_autenticacao)])
+router = APIRouter(prefix="/marcas", tags=["marcas"])
 
 
 @router.get("/", response_model=list[schemas.Marca])
