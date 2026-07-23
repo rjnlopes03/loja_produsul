@@ -25,6 +25,7 @@ export const api = {
     const qs = params.toString();
     return request(`/produtos/${qs ? `?${qs}` : ""}`);
   },
+  obterProduto: (id) => request(`/produtos/${id}`),
   criarProduto: (produto) => request("/produtos/", { method: "POST", body: JSON.stringify(produto) }),
   atualizarProduto: (id, produto) =>
     request(`/produtos/${id}`, { method: "PUT", body: JSON.stringify(produto) }),
