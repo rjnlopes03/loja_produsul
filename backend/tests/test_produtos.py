@@ -135,3 +135,16 @@ def test_listar_produtos_com_marca_id_zero_filtra_corretamente(client: TestClien
 
     assert resposta.status_code == 200
     assert resposta.json() == []
+
+
+def test_excluir_produto_com_movimentacao_retorna_400(client: TestClient) -> None:
+    marca_id = _criar_marca(client)
+    produto_id = _criar_produto(client, marca_id)
+    client.post(
+        "/movimentacoes/", json={"produto_id": produto_id, "tipo": "entrada", "quantidade": 1}
+    )
+
+    resposta = client.delete(f"/produtos/{produto_id}")
+
+    assert resposta.status_code == 400
+    assert "movimenta" in resposta.json()["detail"].lower()
