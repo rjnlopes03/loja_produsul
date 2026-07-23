@@ -34,7 +34,7 @@ Credenciais configuráveis via variáveis de ambiente:
 
 ```bash
 AUTH_USERNAME=admin   # default: admin
-AUTH_PASSWORD=admin   # default: admin
+AUTH_PASSWORD=123  # default: admin
 ```
 
 Em desenvolvimento, sem configurar nada, o login padrão é `admin` / `admin`.

@@ -8,6 +8,7 @@ Responsabilidades:
 - Expirar tokens antigos e limitar tentativas de login para dificultar
   força bruta sobre credenciais fracas/padrão.
 """
+
 import os
 import secrets
 import time
@@ -15,7 +16,7 @@ import time
 from fastapi import Header, HTTPException
 
 AUTH_USERNAME = os.environ.get("AUTH_USERNAME", "admin")
-AUTH_PASSWORD = os.environ.get("AUTH_PASSWORD", "admin")
+AUTH_PASSWORD = os.environ.get("AUTH_PASSWORD", "123")
 
 TOKEN_TTL_SEGUNDOS = 12 * 60 * 60
 LIMITE_TENTATIVAS = 5
@@ -66,7 +67,8 @@ def autenticar(usuario: str, senha: str) -> str:
     tentativas_recentes = _tentativas_recentes(usuario)
     if len(tentativas_recentes) >= LIMITE_TENTATIVAS:
         raise HTTPException(
-            status_code=429, detail="Muitas tentativas de login. Aguarde e tente novamente."
+            status_code=429,
+            detail="Muitas tentativas de login. Aguarde e tente novamente.",
         )
 
     usuario_ok = secrets.compare_digest(usuario, AUTH_USERNAME)
