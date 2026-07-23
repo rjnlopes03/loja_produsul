@@ -27,6 +27,19 @@ uvicorn app.main:app --reload
 
 API disponível em `http://localhost:8000` (docs em `/docs`).
 
+#### Autenticação
+
+Toda a API (exceto `POST /auth/login`) exige um token obtido no login.
+Credenciais configuráveis via variáveis de ambiente:
+
+```bash
+AUTH_USERNAME=admin   # default: admin
+AUTH_PASSWORD=admin   # default: admin
+```
+
+Em desenvolvimento, sem configurar nada, o login padrão é `admin` / `admin`.
+Troque `AUTH_PASSWORD` antes de expor o backend fora da máquina local.
+
 #### Migrations (Alembic)
 
 Mudanças de schema em `app/models.py` devem ser acompanhadas de uma migration:
@@ -56,10 +69,11 @@ backend/
   app/
     models.py       # Marca, Produto (Ração), Movimentação, Cliente, Compra, Pagamento
     schemas.py       # Schemas Pydantic
-    routers/          # Rotas CRUD (marcas, produtos, movimentacoes, clientes)
+    auth.py           # Autenticação (login, validação de token)
+    routers/          # Rotas CRUD (auth, marcas, produtos, movimentacoes, clientes)
     main.py           # App FastAPI + seed de marcas
 frontend/
   src/
-    pages/            # Estoque, Nova Ração, Marcas, Movimentacoes, Clientes, ClienteDetalhe
+    pages/            # Login, Estoque, Nova Ração, Marcas, Movimentacoes, Clientes, ClienteDetalhe
     api/client.js      # Cliente HTTP da API
 ```
