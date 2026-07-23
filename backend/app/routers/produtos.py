@@ -34,7 +34,7 @@ def listar_produtos(
             )
     if castrado is not None:
         query = query.filter(models.Produto.castrado == castrado)
-    if marca_id:
+    if marca_id is not None:
         query = query.filter(models.Produto.marca_id == marca_id)
     return query.order_by(models.Produto.nome).all()
 
