@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client.js";
 import { ESPECIES, FASES_VIDA, ESPECIE_COR } from "../constants.js";
+import { useApiData } from "../hooks/useApiData.js";
 
 function IconBox() {
   return (
@@ -40,33 +41,19 @@ function IconCheck() {
 }
 
 export default function Produtos() {
-  const [produtos, setProdutos] = useState([]);
   const [marcas, setMarcas] = useState([]);
   const [filtros, setFiltros] = useState({ especie: "", fase_vida: "", marca_id: "", castrado: "" });
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState("");
-
-  async function carregar() {
-    setCarregando(true);
-    try {
-      const dados = await api.listarProdutos(filtros);
-      setProdutos(dados);
-      setErro("");
-    } catch (e) {
-      setErro(e.message);
-    } finally {
-      setCarregando(false);
-    }
-  }
+  const {
+    dados: produtos,
+    carregando,
+    erro,
+    setErro,
+    carregar,
+  } = useApiData(() => api.listarProdutos(filtros), [filtros], []);
 
   useEffect(() => {
     api.listarMarcas().then(setMarcas).catch(() => {});
   }, []);
-
-  useEffect(() => {
-    carregar();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtros]);
 
   function atualizarFiltro(campo, valor) {
     setFiltros((f) => {
