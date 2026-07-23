@@ -169,6 +169,7 @@ export default function NovoProduto() {
             required
             type="number"
             step="0.1"
+            min="0.1"
             value={form.peso_kg}
             onChange={(e) => atualizarCampo("peso_kg", e.target.value)}
           />
@@ -180,6 +181,7 @@ export default function NovoProduto() {
             required
             type="number"
             step="0.01"
+            min="0.01"
             value={form.preco}
             onChange={(e) => atualizarCampo("preco", e.target.value)}
           />
@@ -190,6 +192,7 @@ export default function NovoProduto() {
           <input
             required
             type="number"
+            min="0"
             value={form.quantidade_estoque}
             onChange={(e) => atualizarCampo("quantidade_estoque", e.target.value)}
           />
