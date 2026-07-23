@@ -40,6 +40,16 @@ export default function Movimentacoes() {
     }
   }
 
+  async function estornar(id) {
+    if (!confirm("Estornar esta movimentação?")) return;
+    try {
+      await api.estornarMovimentacao(id);
+      carregar();
+    } catch (e) {
+      setErro(e.message);
+    }
+  }
+
   const totalEntradas = movimentacoes.filter((m) => m.tipo === "entrada").length;
   const totalSaidas = movimentacoes.filter((m) => m.tipo === "saida").length;
 
@@ -128,6 +138,7 @@ export default function Movimentacoes() {
                 <th>Marca</th>
                 <th>Tipo</th>
                 <th>Quantidade</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -142,11 +153,20 @@ export default function Movimentacoes() {
                     </span>
                   </td>
                   <td>{m.quantidade}</td>
+                  <td className="acoes">
+                    {m.estornado_em ? (
+                      <span className="badge badge-muted">Estornada</span>
+                    ) : (
+                      <button className="btn-danger" onClick={() => estornar(m.id)}>
+                        Estornar
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
               {movimentacoes.length === 0 && (
                 <tr>
-                  <td className="vazio" colSpan={5}>
+                  <td className="vazio" colSpan={6}>
                     Nenhuma movimentação registrada.
                   </td>
                 </tr>
