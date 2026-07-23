@@ -125,3 +125,13 @@ def test_atualizar_produto_ignora_quantidade_estoque_no_payload(client: TestClie
     assert resposta.status_code == 200
     assert resposta.json()["quantidade_estoque"] == 5
     assert resposta.json()["nome"] == "Outro nome"
+
+
+def test_listar_produtos_com_marca_id_zero_filtra_corretamente(client: TestClient) -> None:
+    marca_id = _criar_marca(client)
+    _criar_produto(client, marca_id)
+
+    resposta = client.get("/produtos/?marca_id=0")
+
+    assert resposta.status_code == 200
+    assert resposta.json() == []
