@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
@@ -18,7 +19,11 @@ def criar_marca(marca: schemas.MarcaCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Marca já cadastrada")
     db_marca = models.Marca(**marca.model_dump())
     db.add(db_marca)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Marca já cadastrada")
     db.refresh(db_marca)
     return db_marca
 
