@@ -49,6 +49,16 @@ export default function ClienteDetalhe() {
     }
   }
 
+  async function estornarCompra(compraId) {
+    if (!confirm("Estornar esta compra?")) return;
+    try {
+      await api.estornarCompra(id, compraId);
+      carregar();
+    } catch (e) {
+      setErro(e.message);
+    }
+  }
+
   if (carregando) return <p className="carregando">Carregando...</p>;
   if (!resumo) return erro ? <p className="erro">{erro}</p> : null;
 
@@ -145,6 +155,7 @@ export default function ClienteDetalhe() {
               <th>Quantidade</th>
               <th>Preço unit.</th>
               <th>Total</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -155,11 +166,20 @@ export default function ClienteDetalhe() {
                 <td>{c.quantidade}</td>
                 <td>R$ {c.preco_unitario.toFixed(2)}</td>
                 <td>R$ {c.valor_total.toFixed(2)}</td>
+                <td className="acoes">
+                  {c.estornado_em ? (
+                    <span className="badge badge-muted">Estornada</span>
+                  ) : (
+                    <button className="btn-danger" onClick={() => estornarCompra(c.id)}>
+                      Estornar
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
             {compras.length === 0 && (
               <tr>
-                <td className="vazio" colSpan={5}>
+                <td className="vazio" colSpan={6}>
                   Nenhuma compra registrada.
                 </td>
               </tr>
