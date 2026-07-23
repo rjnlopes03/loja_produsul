@@ -25,7 +25,7 @@ export default function Movimentacoes() {
 
   useEffect(() => {
     carregar();
-    api.listarProdutos().then(setProdutos).catch(() => {});
+    api.listarProdutos().then(setProdutos).catch((e) => setErro(e.message));
   }, []);
 
   function atualizarCampo(campo, valor) {
