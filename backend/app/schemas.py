@@ -61,6 +61,8 @@ class Movimentacao(MovimentacaoCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
     criado_em: datetime
+    estornado_em: Optional[datetime] = None
+    estorno_de_id: Optional[int] = None
     produto: Produto
 
 
@@ -96,6 +98,7 @@ class Compra(BaseModel):
     preco_unitario: float
     valor_total: float
     criado_em: datetime
+    estornado_em: Optional[datetime] = None
     produto: Produto
 
 
