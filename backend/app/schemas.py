@@ -42,7 +42,6 @@ class ProdutoUpdate(BaseModel):
     castrado: Optional[bool] = None
     peso_kg: Optional[float] = Field(default=None, gt=0)
     preco: Optional[float] = Field(default=None, gt=0)
-    quantidade_estoque: Optional[int] = Field(default=None, ge=0)
 
 
 class Produto(ProdutoBase):
