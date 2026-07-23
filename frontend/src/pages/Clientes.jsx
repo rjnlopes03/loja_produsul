@@ -1,26 +1,18 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client.js";
+import { classificarSaldo, formatarMoeda } from "../format.js";
+import { useApiData } from "../hooks/useApiData.js";
 
 export default function Clientes() {
-  const [clientes, setClientes] = useState([]);
   const [nome, setNome] = useState("");
-  const [erro, setErro] = useState("");
-  const [carregando, setCarregando] = useState(true);
-
-  function carregar() {
-    setCarregando(true);
-    api
-      .listarClientes()
-      .then((dados) => {
-        setClientes(dados);
-        setErro("");
-      })
-      .catch((e) => setErro(e.message))
-      .finally(() => setCarregando(false));
-  }
-
-  useEffect(carregar, []);
+  const {
+    dados: clientes,
+    carregando,
+    erro,
+    setErro,
+    carregar,
+  } = useApiData(() => api.listarClientes(), [], []);
 
   async function adicionar(e) {
     e.preventDefault();
@@ -82,7 +74,9 @@ export default function Clientes() {
               </tr>
             </thead>
             <tbody>
-              {clientes.map((c) => (
+              {clientes.map((c) => {
+                const situacao = classificarSaldo(c.saldo_devedor);
+                return (
                 <tr key={c.id}>
                   <td className="nome-produto">
                     <Link className="link-nome" to={`/clientes/${c.id}`}>
@@ -90,10 +84,10 @@ export default function Clientes() {
                     </Link>
                   </td>
                   <td>
-                    {c.saldo_devedor > 0 ? (
-                      <span className="badge badge-danger">R$ {c.saldo_devedor.toFixed(2)}</span>
-                    ) : c.saldo_devedor < 0 ? (
-                      <span className="badge badge-credit">Crédito de R$ {Math.abs(c.saldo_devedor).toFixed(2)}</span>
+                    {situacao === "devedor" ? (
+                      <span className="badge badge-danger">{formatarMoeda(c.saldo_devedor)}</span>
+                    ) : situacao === "credito" ? (
+                      <span className="badge badge-credit">Crédito de {formatarMoeda(c.saldo_devedor)}</span>
                     ) : (
                       <span className="badge badge-ok">R$ 0.00</span>
                     )}
@@ -104,7 +98,8 @@ export default function Clientes() {
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               {clientes.length === 0 && (
                 <tr>
                   <td className="vazio" colSpan={3}>
