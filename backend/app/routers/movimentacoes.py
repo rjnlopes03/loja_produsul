@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from .. import models, schemas
 from ..database import get_db
+from ..estoque import ajustar_estoque
 
 router = APIRouter(prefix="/movimentacoes", tags=["movimentacoes"])
 
@@ -23,13 +24,8 @@ def criar_movimentacao(mov: schemas.MovimentacaoCreate, db: Session = Depends(ge
     if not produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
 
-    if mov.tipo == models.TipoMovimentacao.SAIDA and produto.quantidade_estoque < mov.quantidade:
+    if not ajustar_estoque(db, mov.produto_id, mov.tipo, mov.quantidade):
         raise HTTPException(status_code=400, detail="Estoque insuficiente")
-
-    if mov.tipo == models.TipoMovimentacao.ENTRADA:
-        produto.quantidade_estoque += mov.quantidade
-    else:
-        produto.quantidade_estoque -= mov.quantidade
 
     db_mov = models.Movimentacao(**mov.model_dump())
     db.add(db_mov)
