@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..database import get_db
+from ..validacoes import garantir_sem_referencias
 
 router = APIRouter(prefix="/marcas", tags=["marcas"])
 
@@ -33,7 +34,12 @@ def excluir_marca(marca_id: int, db: Session = Depends(get_db)):
     db_marca = db.get(models.Marca, marca_id)
     if not db_marca:
         raise HTTPException(status_code=404, detail="Marca não encontrada")
-    if db.query(models.Produto).filter(models.Produto.marca_id == marca_id).count() > 0:
-        raise HTTPException(status_code=400, detail="Não é possível excluir: existem produtos cadastrados com esta marca")
+    garantir_sem_referencias(
+        db,
+        models.Produto,
+        models.Produto.marca_id,
+        marca_id,
+        "Não é possível excluir: existem produtos cadastrados com esta marca",
+    )
     db.delete(db_marca)
     db.commit()
