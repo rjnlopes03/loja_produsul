@@ -74,7 +74,7 @@ def atualizar_produto(produto_id: int, produto: schemas.ProdutoUpdate, db: Sessi
 
 
 @router.delete("/{produto_id}", status_code=204)
-def excluir_produto(produto_id: int, db: Session = Depends(get_db)):
+def excluir_produto(produto_id: int, forcar: bool = False, db: Session = Depends(get_db)):
     db_produto = db.get(models.Produto, produto_id)
     if not db_produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
@@ -85,12 +85,15 @@ def excluir_produto(produto_id: int, db: Session = Depends(get_db)):
         produto_id,
         "Não é possível excluir: produto possui compras de cliente registradas",
     )
-    garantir_sem_referencias(
-        db,
-        models.Movimentacao,
-        models.Movimentacao.produto_id,
-        produto_id,
-        "Não é possível excluir: produto possui movimentações de estoque registradas",
-    )
+    if forcar:
+        db.query(models.Movimentacao).filter(models.Movimentacao.produto_id == produto_id).delete()
+    else:
+        garantir_sem_referencias(
+            db,
+            models.Movimentacao,
+            models.Movimentacao.produto_id,
+            produto_id,
+            "Não é possível excluir: produto possui movimentações de estoque registradas",
+        )
     db.delete(db_produto)
     db.commit()
