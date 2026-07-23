@@ -25,7 +25,7 @@ export default function ClienteDetalhe() {
 
   useEffect(() => {
     carregar();
-    api.listarProdutos().then(setProdutos).catch(() => {});
+    api.listarProdutos().then(setProdutos).catch((e) => setErro(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
