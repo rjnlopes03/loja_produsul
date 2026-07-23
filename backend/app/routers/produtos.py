@@ -63,6 +63,8 @@ def atualizar_produto(produto_id: int, produto: schemas.ProdutoUpdate, db: Sessi
     db_produto = db.get(models.Produto, produto_id)
     if not db_produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
+    if produto.marca_id is not None and not db.get(models.Marca, produto.marca_id):
+        raise HTTPException(status_code=400, detail="Marca inválida")
     for campo, valor in produto.model_dump(exclude_unset=True).items():
         setattr(db_produto, campo, valor)
     db.commit()
