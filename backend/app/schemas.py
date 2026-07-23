@@ -6,6 +6,15 @@ from pydantic import BaseModel, ConfigDict, Field
 from .models import Especie, FaseVida, TipoMovimentacao
 
 
+class LoginRequest(BaseModel):
+    usuario: str
+    senha: str
+
+
+class LoginResponse(BaseModel):
+    token: str
+
+
 class MarcaBase(BaseModel):
     nome: str
 
