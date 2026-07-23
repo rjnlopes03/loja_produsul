@@ -91,7 +91,7 @@ def obter_resumo_cliente(cliente_id: int, db: Session = Depends(get_db)):
         pagamentos=pagamentos,
         total_compras=total_compras,
         total_pagamentos=total_pagamentos,
-        saldo_devedor=total_compras - total_pagamentos,
+        saldo_devedor=_saldo_devedor(db, cliente_id),
     )
 
 
