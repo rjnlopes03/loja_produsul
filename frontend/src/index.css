@@ -163,6 +163,21 @@ h3 {
   white-space: nowrap;
 }
 
+.topbar-sair {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.topbar-sair:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /* ---------- layout ---------- */
 
 .main {
@@ -720,6 +735,26 @@ button:active,
   color: var(--text-muted);
   font-size: 0.9rem;
   padding: 1.5rem 0;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream);
+}
+
+.login-page .brand {
+  margin-bottom: 0.5rem;
+}
+
+.login-page .brand-text strong {
+  color: var(--text);
+}
+
+.login-page .brand-text span {
+  color: var(--text-muted);
 }
 
 @media (max-width: 860px) {

@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
 import { Routes, Route, NavLink } from "react-router-dom";
+import { api, definirAoDeslogar } from "./api/client.js";
+import Login from "./pages/Login.jsx";
 import Produtos from "./pages/Produtos.jsx";
 import NovoProduto from "./pages/NovoProduto.jsx";
 import Marcas from "./pages/Marcas.jsx";
@@ -53,6 +56,26 @@ function IconClientes() {
 }
 
 function App() {
+  const [autenticado, setAutenticado] = useState(() => Boolean(localStorage.getItem("token")));
+
+  useEffect(() => {
+    definirAoDeslogar(() => setAutenticado(false));
+  }, []);
+
+  async function sair() {
+    try {
+      await api.logout();
+    } catch {
+      // mesmo se a chamada falhar, encerra a sessão localmente
+    }
+    localStorage.removeItem("token");
+    setAutenticado(false);
+  }
+
+  if (!autenticado) {
+    return <Login aoLogar={() => setAutenticado(true)} />;
+  }
+
   return (
     <div className="app">
       <header className="topbar">
@@ -89,6 +112,9 @@ function App() {
           </nav>
 
           <span className="topbar-tag">Controle de estoque interno</span>
+          <button type="button" className="topbar-sair" onClick={sair}>
+            Sair
+          </button>
         </div>
       </header>
 
