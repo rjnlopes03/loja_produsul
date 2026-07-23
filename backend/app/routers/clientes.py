@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 from .. import models, schemas
 from ..database import get_db
 from ..estoque import ajustar_estoque
+from ..validacoes import garantir_sem_referencias
 
 router = APIRouter(prefix="/clientes", tags=["clientes"])
 
@@ -54,10 +55,9 @@ def excluir_cliente(cliente_id: int, db: Session = Depends(get_db)):
     db_cliente = db.get(models.Cliente, cliente_id)
     if not db_cliente:
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
-    tem_compras = db.query(models.Compra).filter(models.Compra.cliente_id == cliente_id).count() > 0
-    tem_pagamentos = db.query(models.Pagamento).filter(models.Pagamento.cliente_id == cliente_id).count() > 0
-    if tem_compras or tem_pagamentos:
-        raise HTTPException(status_code=400, detail="Não é possível excluir: cliente possui compras ou pagamentos registrados")
+    mensagem = "Não é possível excluir: cliente possui compras ou pagamentos registrados"
+    garantir_sem_referencias(db, models.Compra, models.Compra.cliente_id, cliente_id, mensagem)
+    garantir_sem_referencias(db, models.Pagamento, models.Pagamento.cliente_id, cliente_id, mensagem)
     db.delete(db_cliente)
     db.commit()
 
