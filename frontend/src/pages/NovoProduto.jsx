@@ -24,14 +24,19 @@ export default function NovoProduto() {
   const [erro, setErro] = useState("");
 
   useEffect(() => {
-    api.listarMarcas().then(setMarcas);
+    api.listarMarcas().then(setMarcas).catch((e) => setErro(e.message));
   }, []);
 
   useEffect(() => {
     if (editando) {
-      api.listarProdutos().then((produtos) => {
-        const produto = produtos.find((p) => String(p.id) === id);
-        if (produto) {
+      api
+        .listarProdutos()
+        .then((produtos) => {
+          const produto = produtos.find((p) => String(p.id) === id);
+          if (!produto) {
+            setErro("Produto não encontrado para edição.");
+            return;
+          }
           setForm({
             nome: produto.nome,
             marca_id: produto.marca_id,
@@ -42,8 +47,8 @@ export default function NovoProduto() {
             preco: produto.preco,
             quantidade_estoque: produto.quantidade_estoque,
           });
-        }
-      });
+        })
+        .catch((e) => setErro(e.message));
     }
   }, [editando, id]);
 
