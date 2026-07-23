@@ -148,3 +148,47 @@ def test_excluir_produto_com_movimentacao_retorna_400(client: TestClient) -> Non
 
     assert resposta.status_code == 400
     assert "movimenta" in resposta.json()["detail"].lower()
+
+
+def test_excluir_produto_forcado_apaga_movimentacoes_e_produto(client: TestClient) -> None:
+    marca_id = _criar_marca(client)
+    produto_id = _criar_produto(client, marca_id)
+    client.post(
+        "/movimentacoes/", json={"produto_id": produto_id, "tipo": "entrada", "quantidade": 1}
+    )
+
+    resposta = client.delete(f"/produtos/{produto_id}?forcar=true")
+
+    assert resposta.status_code == 204
+    assert client.get(f"/produtos/{produto_id}").status_code == 404
+    movimentacoes_restantes = [
+        m for m in client.get("/movimentacoes/").json() if m["produto_id"] == produto_id
+    ]
+    assert movimentacoes_restantes == []
+
+
+def test_excluir_produto_forcado_com_movimentacao_estornada_funciona(client: TestClient) -> None:
+    marca_id = _criar_marca(client)
+    produto_id = _criar_produto(client, marca_id)
+    mov = client.post(
+        "/movimentacoes/", json={"produto_id": produto_id, "tipo": "entrada", "quantidade": 5}
+    ).json()
+    client.post(f"/movimentacoes/{mov['id']}/estornar")
+
+    resposta = client.delete(f"/produtos/{produto_id}?forcar=true")
+
+    assert resposta.status_code == 204
+
+
+def test_excluir_produto_forcado_com_compra_continua_bloqueado(client: TestClient) -> None:
+    marca_id = _criar_marca(client)
+    produto_id = _criar_produto(client, marca_id)
+    cliente_id = client.post("/clientes/", json={"nome": "Fulano"}).json()["id"]
+    client.post(
+        f"/clientes/{cliente_id}/compras", json={"produto_id": produto_id, "quantidade": 1}
+    )
+
+    resposta = client.delete(f"/produtos/{produto_id}?forcar=true")
+
+    assert resposta.status_code == 400
+    assert "compra" in resposta.json()["detail"].lower()
