@@ -3,10 +3,32 @@ Testes da rota de marcas.
 
 Responsabilidades:
 - Cobrir a criação concorrente de marcas com o mesmo nome.
+- Cobrir o bloqueio de exclusão de marca referenciada por um produto.
 """
 from concurrent.futures import ThreadPoolExecutor
 
 from fastapi.testclient import TestClient
+
+
+def test_excluir_marca_com_produto_retorna_400(client: TestClient) -> None:
+    marca_id = client.post("/marcas/", json={"nome": "Golden"}).json()["id"]
+    client.post(
+        "/produtos/",
+        json={
+            "nome": "Ração Teste",
+            "marca_id": marca_id,
+            "especie": "cachorro",
+            "fase_vida": "adulto",
+            "peso_kg": 10.0,
+            "preco": 99.9,
+            "quantidade_estoque": 5,
+        },
+    )
+
+    resposta = client.delete(f"/marcas/{marca_id}")
+
+    assert resposta.status_code == 400
+    assert "produtos" in resposta.json()["detail"].lower()
 
 
 def test_criar_marcas_concorrentes_com_mesmo_nome_nao_quebra_com_500(
