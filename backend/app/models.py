@@ -63,6 +63,8 @@ class Movimentacao(Base):
     tipo = Column(Enum(TipoMovimentacao), nullable=False)
     quantidade = Column(Integer, nullable=False)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
+    estornado_em = Column(DateTime(timezone=True), nullable=True)
+    estorno_de_id = Column(Integer, ForeignKey("movimentacoes.id"), nullable=True)
 
     produto = relationship("Produto", back_populates="movimentacoes")
 
@@ -87,6 +89,7 @@ class Compra(Base):
     quantidade = Column(Integer, nullable=False)
     preco_unitario = Column(Float, nullable=False)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
+    estornado_em = Column(DateTime(timezone=True), nullable=True)
 
     cliente = relationship("Cliente", back_populates="compras")
     produto = relationship("Produto")
