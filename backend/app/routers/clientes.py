@@ -4,11 +4,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from .. import models, schemas
+from ..auth import exigir_autenticacao
 from ..database import get_db
 from ..estoque import ajustar_estoque
 from ..validacoes import garantir_sem_referencias, marcar_estornado
 
-router = APIRouter(prefix="/clientes", tags=["clientes"])
+router = APIRouter(prefix="/clientes", tags=["clientes"], dependencies=[Depends(exigir_autenticacao)])
 
 
 def _saldo_devedor(db: Session, cliente_id: int) -> float:

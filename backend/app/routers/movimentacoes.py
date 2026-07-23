@@ -2,11 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from .. import models, schemas
+from ..auth import exigir_autenticacao
 from ..database import get_db
 from ..estoque import ajustar_estoque
 from ..validacoes import marcar_estornado
 
-router = APIRouter(prefix="/movimentacoes", tags=["movimentacoes"])
+router = APIRouter(
+    prefix="/movimentacoes", tags=["movimentacoes"], dependencies=[Depends(exigir_autenticacao)]
+)
 
 
 @router.get("/", response_model=list[schemas.Movimentacao])
