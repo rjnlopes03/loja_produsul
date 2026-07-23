@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 from .. import models, schemas
 from ..database import get_db
 from ..estoque import ajustar_estoque
-from ..validacoes import garantir_sem_referencias
+from ..validacoes import garantir_sem_referencias, marcar_estornado
 
 router = APIRouter(prefix="/clientes", tags=["clientes"])
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/clientes", tags=["clientes"])
 def _saldo_devedor(db: Session, cliente_id: int) -> float:
     total_compras = (
         db.query(func.sum(models.Compra.preco_unitario * models.Compra.quantidade))
-        .filter(models.Compra.cliente_id == cliente_id)
+        .filter(models.Compra.cliente_id == cliente_id, models.Compra.estornado_em.is_(None))
         .scalar()
         or 0
     )
@@ -82,7 +82,7 @@ def obter_resumo_cliente(cliente_id: int, db: Session = Depends(get_db)):
         .all()
     )
 
-    total_compras = sum(c.valor_total for c in compras)
+    total_compras = sum(c.valor_total for c in compras if c.estornado_em is None)
     total_pagamentos = sum(p.valor for p in pagamentos)
 
     return schemas.ClienteResumo(
@@ -120,6 +120,28 @@ def registrar_compra(cliente_id: int, compra: schemas.CompraCreate, db: Session 
     db.commit()
     db.refresh(db_compra)
     return db_compra
+
+
+@router.post("/{cliente_id}/compras/{compra_id}/estornar", response_model=schemas.Compra)
+def estornar_compra(cliente_id: int, compra_id: int, db: Session = Depends(get_db)):
+    compra = db.get(models.Compra, compra_id)
+    if not compra or compra.cliente_id != cliente_id:
+        raise HTTPException(status_code=404, detail="Compra não encontrada")
+    if not marcar_estornado(db, models.Compra, compra_id):
+        raise HTTPException(status_code=400, detail="Compra já foi estornada")
+
+    ajustar_estoque(db, compra.produto_id, models.TipoMovimentacao.ENTRADA, compra.quantidade)
+    db.add(
+        models.Movimentacao(
+            produto_id=compra.produto_id,
+            tipo=models.TipoMovimentacao.ENTRADA,
+            quantidade=compra.quantidade,
+        )
+    )
+
+    db.commit()
+    db.refresh(compra)
+    return compra
 
 
 @router.post("/{cliente_id}/pagamentos", response_model=schemas.Pagamento, status_code=201)
