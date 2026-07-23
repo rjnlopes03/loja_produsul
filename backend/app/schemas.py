@@ -25,9 +25,9 @@ class ProdutoBase(BaseModel):
     especie: Especie
     fase_vida: FaseVida
     castrado: Optional[bool] = None
-    peso_kg: float
-    preco: float
-    quantidade_estoque: int = 0
+    peso_kg: float = Field(gt=0)
+    preco: float = Field(gt=0)
+    quantidade_estoque: int = Field(default=0, ge=0)
 
 
 class ProdutoCreate(ProdutoBase):
@@ -40,9 +40,9 @@ class ProdutoUpdate(BaseModel):
     especie: Optional[Especie] = None
     fase_vida: Optional[FaseVida] = None
     castrado: Optional[bool] = None
-    peso_kg: Optional[float] = None
-    preco: Optional[float] = None
-    quantidade_estoque: Optional[int] = None
+    peso_kg: Optional[float] = Field(default=None, gt=0)
+    preco: Optional[float] = Field(default=None, gt=0)
+    quantidade_estoque: Optional[int] = Field(default=None, ge=0)
 
 
 class Produto(ProdutoBase):
