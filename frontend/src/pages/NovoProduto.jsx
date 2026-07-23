@@ -30,13 +30,8 @@ export default function NovoProduto() {
   useEffect(() => {
     if (editando) {
       api
-        .listarProdutos()
-        .then((produtos) => {
-          const produto = produtos.find((p) => String(p.id) === id);
-          if (!produto) {
-            setErro("Produto não encontrado para edição.");
-            return;
-          }
+        .obterProduto(id)
+        .then((produto) => {
           setForm({
             nome: produto.nome,
             marca_id: produto.marca_id,
