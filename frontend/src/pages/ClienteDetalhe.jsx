@@ -1,30 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client.js";
+import { classificarSaldo, formatarMoeda } from "../format.js";
+import { useApiData } from "../hooks/useApiData.js";
 
 export default function ClienteDetalhe() {
   const { id } = useParams();
-  const [resumo, setResumo] = useState(null);
   const [produtos, setProdutos] = useState([]);
   const [compraForm, setCompraForm] = useState({ produto_id: "", quantidade: "" });
   const [valorPagamento, setValorPagamento] = useState("");
-  const [erro, setErro] = useState("");
-  const [carregando, setCarregando] = useState(true);
-
-  function carregar() {
-    setCarregando(true);
-    api
-      .obterResumoCliente(id)
-      .then((dados) => {
-        setResumo(dados);
-        setErro("");
-      })
-      .catch((e) => setErro(e.message))
-      .finally(() => setCarregando(false));
-  }
+  const {
+    dados: resumo,
+    carregando,
+    erro,
+    setErro,
+    carregar,
+  } = useApiData(() => api.obterResumoCliente(id), [id], null);
 
   useEffect(() => {
-    carregar();
     api.listarProdutos().then(setProdutos).catch((e) => setErro(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -60,6 +53,7 @@ export default function ClienteDetalhe() {
   if (!resumo) return erro ? <p className="erro">{erro}</p> : null;
 
   const { cliente, compras, pagamentos, saldo_devedor } = resumo;
+  const situacaoSaldo = classificarSaldo(saldo_devedor);
 
   return (
     <div>
@@ -76,13 +70,13 @@ export default function ClienteDetalhe() {
           <div className="hero-stats">
             <div
               className={`stat-chip ${
-                saldo_devedor > 0 ? "stat-alert" : saldo_devedor < 0 ? "stat-credit" : ""
+                situacaoSaldo === "devedor" ? "stat-alert" : situacaoSaldo === "credito" ? "stat-credit" : ""
               }`}
             >
               <div className="stat-icon">R$</div>
               <div>
-                <strong>R$ {Math.abs(saldo_devedor).toFixed(2)}</strong>
-                <span>{saldo_devedor < 0 ? "crédito do cliente" : "saldo devedor"}</span>
+                <strong>{formatarMoeda(saldo_devedor)}</strong>
+                <span>{situacaoSaldo === "credito" ? "crédito do cliente" : "saldo devedor"}</span>
               </div>
             </div>
           </div>
