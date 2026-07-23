@@ -66,8 +66,12 @@ export default function NovoProduto() {
       castrado: form.especie === "gato" && form.castrado !== "" ? form.castrado === "true" : null,
       peso_kg: Number(form.peso_kg),
       preco: Number(form.preco),
-      quantidade_estoque: Number(form.quantidade_estoque),
     };
+    if (editando) {
+      delete payload.quantidade_estoque;
+    } else {
+      payload.quantidade_estoque = Number(form.quantidade_estoque);
+    }
     try {
       if (editando) {
         await api.atualizarProduto(id, payload);
@@ -187,16 +191,18 @@ export default function NovoProduto() {
           />
         </label>
 
-        <label>
-          Quantidade em estoque
-          <input
-            required
-            type="number"
-            min="0"
-            value={form.quantidade_estoque}
-            onChange={(e) => atualizarCampo("quantidade_estoque", e.target.value)}
-          />
-        </label>
+        {!editando && (
+          <label>
+            Quantidade em estoque
+            <input
+              required
+              type="number"
+              min="0"
+              value={form.quantidade_estoque}
+              onChange={(e) => atualizarCampo("quantidade_estoque", e.target.value)}
+            />
+          </label>
+        )}
 
         {erro && <p className="erro">{erro}</p>}
 
