@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from .. import models, schemas
 from ..database import get_db
+from ..estoque import ajustar_estoque
 
 router = APIRouter(prefix="/clientes", tags=["clientes"])
 
@@ -104,10 +105,9 @@ def registrar_compra(cliente_id: int, compra: schemas.CompraCreate, db: Session 
     if not produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
 
-    if produto.quantidade_estoque < compra.quantidade:
+    if not ajustar_estoque(db, compra.produto_id, models.TipoMovimentacao.SAIDA, compra.quantidade):
         raise HTTPException(status_code=400, detail="Estoque insuficiente")
 
-    produto.quantidade_estoque -= compra.quantidade
     db.add(models.Movimentacao(produto_id=produto.id, tipo=models.TipoMovimentacao.SAIDA, quantidade=compra.quantidade))
 
     db_compra = models.Compra(
