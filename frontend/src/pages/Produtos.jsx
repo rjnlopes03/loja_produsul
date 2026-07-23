@@ -71,6 +71,21 @@ export default function Produtos() {
       await api.excluirProduto(id);
       carregar();
     } catch (e) {
+      if (e.message.includes("movimentações de estoque registradas")) {
+        if (
+          confirm(
+            `${e.message}\n\nDeseja excluir mesmo assim? O histórico de movimentações deste produto será perdido.`
+          )
+        ) {
+          try {
+            await api.excluirProduto(id, { forcar: true });
+            carregar();
+          } catch (e2) {
+            setErro(e2.message);
+          }
+        }
+        return;
+      }
       setErro(e.message);
     }
   }

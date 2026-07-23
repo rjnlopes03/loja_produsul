@@ -29,7 +29,8 @@ export const api = {
   criarProduto: (produto) => request("/produtos/", { method: "POST", body: JSON.stringify(produto) }),
   atualizarProduto: (id, produto) =>
     request(`/produtos/${id}`, { method: "PUT", body: JSON.stringify(produto) }),
-  excluirProduto: (id) => request(`/produtos/${id}`, { method: "DELETE" }),
+  excluirProduto: (id, { forcar = false } = {}) =>
+    request(`/produtos/${id}${forcar ? "?forcar=true" : ""}`, { method: "DELETE" }),
 
   listarMovimentacoes: () => request("/movimentacoes/"),
   criarMovimentacao: (mov) => request("/movimentacoes/", { method: "POST", body: JSON.stringify(mov) }),
