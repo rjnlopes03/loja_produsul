@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from .. import models, schemas
 from ..database import get_db
+from ..validacoes import garantir_sem_referencias
 
 router = APIRouter(prefix="/produtos", tags=["produtos"])
 
@@ -77,11 +78,19 @@ def excluir_produto(produto_id: int, db: Session = Depends(get_db)):
     db_produto = db.get(models.Produto, produto_id)
     if not db_produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
-    tem_compras = db.query(models.Compra).filter(models.Compra.produto_id == produto_id).count() > 0
-    if tem_compras:
-        raise HTTPException(status_code=400, detail="Não é possível excluir: produto possui compras de cliente registradas")
-    tem_movimentacoes = db.query(models.Movimentacao).filter(models.Movimentacao.produto_id == produto_id).count() > 0
-    if tem_movimentacoes:
-        raise HTTPException(status_code=400, detail="Não é possível excluir: produto possui movimentações de estoque registradas")
+    garantir_sem_referencias(
+        db,
+        models.Compra,
+        models.Compra.produto_id,
+        produto_id,
+        "Não é possível excluir: produto possui compras de cliente registradas",
+    )
+    garantir_sem_referencias(
+        db,
+        models.Movimentacao,
+        models.Movimentacao.produto_id,
+        produto_id,
+        "Não é possível excluir: produto possui movimentações de estoque registradas",
+    )
     db.delete(db_produto)
     db.commit()
