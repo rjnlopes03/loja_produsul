@@ -1,31 +1,23 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client.js";
+import { useApiData } from "../hooks/useApiData.js";
 
 const vazio = { produto_id: "", tipo: "entrada", quantidade: "" };
 
 export default function Movimentacoes() {
-  const [movimentacoes, setMovimentacoes] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [form, setForm] = useState(vazio);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState("");
-
-  async function carregar() {
-    setCarregando(true);
-    try {
-      const dados = await api.listarMovimentacoes();
-      setMovimentacoes(dados);
-      setErro("");
-    } catch (e) {
-      setErro(e.message);
-    } finally {
-      setCarregando(false);
-    }
-  }
+  const {
+    dados: movimentacoes,
+    carregando,
+    erro,
+    setErro,
+    carregar,
+  } = useApiData(() => api.listarMovimentacoes(), [], []);
 
   useEffect(() => {
-    carregar();
     api.listarProdutos().then(setProdutos).catch((e) => setErro(e.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function atualizarCampo(campo, valor) {
