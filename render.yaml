@@ -1,0 +1,29 @@
+# Blueprint do Render: liga o backend ao banco sem copiar credenciais.
+# Render -> New -> Blueprint -> escolha este repositório.
+services:
+  - type: web
+    name: loja_produsul
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: backend
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      # URL do banco preenchida automaticamente pelo Render
+      - key: DATABASE_URL
+        fromDatabase:
+          name: loja-produsul-db
+          property: connectionString
+      # Senha de acesso ao sistema, gerada aleatoriamente.
+      # Para ver: serviço -> Environment -> ícone de olho em ADMIN_PASSWORD.
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://loja-produsul-frontend.vercel.app
+
+databases:
+  - name: loja-produsul-db
+    plan: free
+    region: oregon
