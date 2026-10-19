@@ -1,9 +1,9 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .models import Especie, FaseVida, TipoMovimentacao
+from .models import Especie, FaseVida, StatusPagamento, TipoMovimentacao
 
 
 class MarcaBase(BaseModel):
@@ -73,19 +73,51 @@ class ClienteCreate(ClienteBase):
     pass
 
 
+class ClienteUpdate(BaseModel):
+    nome: Optional[str] = None
+    telefone: Optional[str] = None
+    observacoes: Optional[str] = None
+    limite_credito: Optional[float] = Field(default=None, ge=0)
+    dia_vencimento: Optional[int] = Field(default=None, ge=1, le=28)
+    # null = status automático (pelo vencimento)
+    status_manual: Optional[StatusPagamento] = None
+
+
 class Cliente(ClienteBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    telefone: Optional[str] = None
+    observacoes: Optional[str] = None
+    limite_credito: Optional[float] = None
+    dia_vencimento: Optional[int] = None
+    status_manual: Optional[StatusPagamento] = None
     criado_em: datetime
 
 
-class ClienteComSaldo(Cliente):
+class SituacaoConta(BaseModel):
     saldo_devedor: float
+    valor_vencido: float
+    # Vencimento da compra mais antiga ainda não paga.
+    proximo_vencimento: Optional[date] = None
+    status_automatico: StatusPagamento
+    status: StatusPagamento
+    acima_do_limite: bool
+
+
+class ClienteComSaldo(Cliente, SituacaoConta):
+    pass
 
 
 class CompraCreate(BaseModel):
     produto_id: int
     quantidade: int = Field(gt=0)
+    data: Optional[date] = None
+
+
+class CompraUpdate(BaseModel):
+    quantidade: Optional[int] = Field(default=None, gt=0)
+    preco_unitario: Optional[float] = Field(default=None, ge=0)
+    data: Optional[date] = None
 
 
 class Compra(BaseModel):
@@ -102,6 +134,12 @@ class Compra(BaseModel):
 
 class PagamentoCreate(BaseModel):
     valor: float = Field(gt=0)
+    data: Optional[date] = None
+
+
+class PagamentoUpdate(BaseModel):
+    valor: Optional[float] = Field(default=None, gt=0)
+    data: Optional[date] = None
 
 
 class Pagamento(BaseModel):
@@ -112,10 +150,9 @@ class Pagamento(BaseModel):
     criado_em: datetime
 
 
-class ClienteResumo(BaseModel):
+class ClienteResumo(SituacaoConta):
     cliente: Cliente
     compras: list[Compra]
     pagamentos: list[Pagamento]
     total_compras: float
     total_pagamentos: float
-    saldo_devedor: float

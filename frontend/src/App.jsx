@@ -1,10 +1,13 @@
+import { useEffect, useState } from "react";
 import { Routes, Route, NavLink } from "react-router-dom";
+import { api, obterToken, salvarToken } from "./api/client.js";
 import Produtos from "./pages/Produtos.jsx";
 import NovoProduto from "./pages/NovoProduto.jsx";
 import Marcas from "./pages/Marcas.jsx";
 import Movimentacoes from "./pages/Movimentacoes.jsx";
 import Clientes from "./pages/Clientes.jsx";
 import ClienteDetalhe from "./pages/ClienteDetalhe.jsx";
+import Login from "./pages/Login.jsx";
 
 function IconEstoque() {
   return (
@@ -53,6 +56,37 @@ function IconClientes() {
 }
 
 function App() {
+  // null = verificando; depois, se o backend exige senha e se já há sessão.
+  const [loginObrigatorio, setLoginObrigatorio] = useState(null);
+  const [autenticado, setAutenticado] = useState(Boolean(obterToken()));
+  const [erroConexao, setErroConexao] = useState("");
+
+  useEffect(() => {
+    api
+      .statusLogin()
+      .then((s) => setLoginObrigatorio(s.login_obrigatorio))
+      .catch(() => setErroConexao("Não foi possível conectar ao servidor. Tente recarregar a página."));
+
+    const expirou = () => setAutenticado(false);
+    window.addEventListener("sessao-expirada", expirou);
+    return () => window.removeEventListener("sessao-expirada", expirou);
+  }, []);
+
+  function sair() {
+    salvarToken("");
+    setAutenticado(false);
+  }
+
+  if (erroConexao) {
+    return (
+      <div className="login">
+        <p className="erro">{erroConexao}</p>
+      </div>
+    );
+  }
+  if (loginObrigatorio === null) return <p className="carregando login">Carregando...</p>;
+  if (loginObrigatorio && !autenticado) return <Login onEntrar={() => setAutenticado(true)} />;
+
   return (
     <div className="app">
       <header className="topbar">
@@ -88,7 +122,13 @@ function App() {
             </NavLink>
           </nav>
 
-          <span className="topbar-tag">Controle de estoque interno</span>
+          {loginObrigatorio ? (
+            <button className="topbar-sair" onClick={sair}>
+              Sair
+            </button>
+          ) : (
+            <span className="topbar-tag">Controle de estoque interno</span>
+          )}
         </div>
       </header>
 

@@ -38,8 +38,8 @@ class Produto(Base):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String, nullable=False)
     marca_id = Column(Integer, ForeignKey("marcas.id"), nullable=False)
-    especie = Column(Enum(Especie), nullable=False)
-    fase_vida = Column(Enum(FaseVida), nullable=False)
+    especie = Column(Enum(Especie, native_enum=False), nullable=False)
+    fase_vida = Column(Enum(FaseVida, native_enum=False), nullable=False)
     castrado = Column(Boolean, nullable=True)
     peso_kg = Column(Float, nullable=False)
     preco = Column(Float, nullable=False)
@@ -60,11 +60,16 @@ class Movimentacao(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     produto_id = Column(Integer, ForeignKey("produtos.id"), nullable=False)
-    tipo = Column(Enum(TipoMovimentacao), nullable=False)
+    tipo = Column(Enum(TipoMovimentacao, native_enum=False), nullable=False)
     quantidade = Column(Integer, nullable=False)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
 
     produto = relationship("Produto", back_populates="movimentacoes")
+
+
+class StatusPagamento(str, enum.Enum):
+    EM_DIA = "em_dia"
+    ATRASADO = "atrasado"
 
 
 class Cliente(Base):
@@ -72,6 +77,13 @@ class Cliente(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String, unique=True, nullable=False)
+    telefone = Column(String, nullable=True)
+    observacoes = Column(String, nullable=True)
+    limite_credito = Column(Float, nullable=True)
+    # Dia do mês (1 a 28) em que vence a conta das compras do mês anterior.
+    dia_vencimento = Column(Integer, nullable=True)
+    # Quando preenchido, substitui o status calculado pelo vencimento.
+    status_manual = Column(Enum(StatusPagamento, native_enum=False), nullable=True)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
 
     compras = relationship("Compra", back_populates="cliente")
