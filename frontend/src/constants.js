@@ -24,3 +24,8 @@ export const ESPECIE_COR = {
   vaca: { bg: "#eceeea", fg: "#52594e", sigla: "V" },
   multiespecie: { bg: "#e9e4f5", fg: "#4b3a82", sigla: "M" },
 };
+
+export const STATUS_PAGAMENTO = {
+  em_dia: { label: "Em dia", badge: "badge-ok" },
+  atrasado: { label: "Atrasado", badge: "badge-danger" },
+};

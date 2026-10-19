@@ -163,6 +163,18 @@ h3 {
   white-space: nowrap;
 }
 
+.topbar-sair {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.85);
+  box-shadow: none;
+  padding: 0.45rem 0.9rem;
+}
+
+.topbar-sair:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 /* ---------- layout ---------- */
 
 .main {
@@ -385,7 +397,9 @@ select.filtro-select:hover {
 
 .form input,
 .form select,
-.form-inline input {
+.form textarea,
+.form-inline input,
+.tabela input {
   padding: 0.6rem 0.85rem;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
@@ -398,6 +412,8 @@ select.filtro-select:hover {
 
 .form input:focus,
 .form select:focus,
+.form textarea:focus,
+.tabela input:focus,
 .form-inline input:focus,
 select.filtro-select:focus {
   outline: none;
@@ -677,6 +693,79 @@ button:active,
 
 .form button[type="submit"]:hover {
   background: var(--rust-600);
+}
+
+.form textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.form-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.1rem;
+}
+
+.form-larga {
+  max-width: none;
+  margin-bottom: 2rem;
+}
+
+.form-acoes {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.form-acoes button {
+  margin-top: 0.3rem;
+}
+
+.dica {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-faint);
+}
+
+.btn-sec {
+  background: transparent;
+  color: var(--brand-700);
+  border: 1px solid var(--border-strong);
+  box-shadow: none;
+}
+
+.btn-sec:hover {
+  background: var(--brand-100);
+}
+
+.tabela input {
+  width: 100%;
+  min-width: 6rem;
+  padding: 0.4rem 0.6rem;
+}
+
+/* ---------- login ---------- */
+
+.login {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.login .form {
+  width: 100%;
+  max-width: 360px;
+}
+
+.login .brand-text strong {
+  color: var(--brand-800);
+}
+
+.login .brand-text span {
+  color: var(--text-muted);
 }
 
 /* ---------- marcas ---------- */
