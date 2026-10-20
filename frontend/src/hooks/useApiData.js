@@ -5,8 +5,9 @@ export function useApiData(fetchFn, deps, valorInicial) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
-  const carregar = useCallback(() => {
-    setCarregando(true);
+  // Com `silencioso`, recarrega sem ligar o "carregando" (a tela não pisca nem perde o que está aberto).
+  const carregar = useCallback(({ silencioso = false } = {}) => {
+    if (!silencioso) setCarregando(true);
     return fetchFn()
       .then((resultado) => {
         setDados(resultado);
