@@ -31,7 +31,7 @@ def garantir_sem_referencias(
         raise HTTPException(status_code=400, detail=mensagem)
 
 
-def marcar_estornado(db: Session, modelo: type, id_: int) -> bool:
+def marcar_estornado(db: Session, modelo: type, id_: int, *condicoes: ColumnElement) -> bool:
     """Marca um registro como estornado de forma atômica.
 
     A checagem "ainda não estornado" e a escrita de `estornado_em`
@@ -43,13 +43,16 @@ def marcar_estornado(db: Session, modelo: type, id_: int) -> bool:
         modelo: Classe do modelo SQLAlchemy (precisa ter as colunas
             `id` e `estornado_em`).
         id_: Id do registro a marcar.
+        condicoes: Filtros extras que o registro ainda precisa atender
+            (ex.: a quantidade lida antes), checados no mesmo UPDATE.
 
     Returns:
-        True se marcou agora; False se o registro já estava estornado.
+        True se marcou agora; False se o registro já estava estornado
+        ou não atende mais às `condicoes`.
     """
     resultado = db.execute(
         update(modelo)
-        .where(modelo.id == id_, modelo.estornado_em.is_(None))
+        .where(modelo.id == id_, modelo.estornado_em.is_(None), *condicoes)
         .values(estornado_em=func.now())
     )
     return resultado.rowcount > 0

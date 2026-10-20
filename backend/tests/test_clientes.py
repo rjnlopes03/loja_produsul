@@ -159,3 +159,58 @@ def test_editar_quantidade_da_compra_acerta_estoque_e_gera_movimentacao(client: 
 
     tipos = [m["tipo"] for m in client.get("/movimentacoes/").json()]
     assert sorted(tipos) == ["entrada", "saida", "saida"]
+
+
+def _alterar_quantidade_depois_da_leitura(monkeypatch, funcao: str, nova_quantidade: int) -> None:
+    """Simula outra ação mudando a quantidade da compra entre a leitura e a escrita da rota."""
+    from sqlalchemy import update
+
+    from app import models
+    from app.routers import clientes
+
+    original = getattr(clientes, funcao)
+
+    def lida_e_alterada(db, cliente_id, compra_id):
+        compra = original(db, cliente_id, compra_id)
+        # Sem sincronizar a sessão: o objeto lido continua com a quantidade antiga, como numa outra conexão.
+        db.execute(
+            update(models.Compra)
+            .where(models.Compra.id == compra_id)
+            .values(quantidade=nova_quantidade)
+            .execution_options(synchronize_session=False)
+        )
+        return compra
+
+    monkeypatch.setattr(clientes, funcao, lida_e_alterada)
+
+
+def test_estornar_compra_alterada_por_outra_acao_nao_devolve_quantidade_antiga(
+    client: TestClient, monkeypatch
+) -> None:
+    produto = _criar_produto(client, quantidade_estoque=10, preco=50.0)
+    cliente_id = _criar_cliente(client)
+    compra = client.post(
+        f"/clientes/{cliente_id}/compras", json={"produto_id": produto["id"], "quantidade": 3}
+    ).json()
+    _alterar_quantidade_depois_da_leitura(monkeypatch, "_obter_compra", 5)
+
+    resposta = client.post(f"/clientes/{cliente_id}/compras/{compra['id']}/estornar")
+
+    assert resposta.status_code == 409
+    assert client.get(f"/produtos/{produto['id']}").json()["quantidade_estoque"] == 7
+
+
+def test_excluir_compra_alterada_por_outra_acao_nao_devolve_quantidade_antiga(
+    client: TestClient, monkeypatch
+) -> None:
+    produto = _criar_produto(client, quantidade_estoque=10, preco=50.0)
+    cliente_id = _criar_cliente(client)
+    compra = client.post(
+        f"/clientes/{cliente_id}/compras", json={"produto_id": produto["id"], "quantidade": 3}
+    ).json()
+    _alterar_quantidade_depois_da_leitura(monkeypatch, "_obter_compra_ativa", 5)
+
+    resposta = client.delete(f"/clientes/{cliente_id}/compras/{compra['id']}")
+
+    assert resposta.status_code == 409
+    assert client.get(f"/produtos/{produto['id']}").json()["quantidade_estoque"] == 7

@@ -40,6 +40,13 @@ def estornar_movimentacao(mov_id: int, db: Session = Depends(get_db)):
     mov = db.get(models.Movimentacao, mov_id)
     if not mov:
         raise HTTPException(status_code=404, detail="Movimentação não encontrada")
+    # Saídas de venda se desfazem pela conta do cliente (senão a ração volta e a compra segue cobrada),
+    # e estornar um estorno só reaplicaria o lançamento original.
+    if mov.origem != models.OrigemMovimentacao.MANUAL:
+        raise HTTPException(
+            status_code=400,
+            detail="Só movimentações registradas manualmente podem ser estornadas. Vendas se desfazem na conta do cliente.",
+        )
     if not marcar_estornado(db, models.Movimentacao, mov_id):
         raise HTTPException(status_code=400, detail="Movimentação já foi estornada")
 
@@ -56,6 +63,7 @@ def estornar_movimentacao(mov_id: int, db: Session = Depends(get_db)):
         tipo=tipo_reverso,
         quantidade=mov.quantidade,
         estorno_de_id=mov.id,
+        origem=models.OrigemMovimentacao.ESTORNO,
     )
     db.add(db_estorno)
     db.commit()

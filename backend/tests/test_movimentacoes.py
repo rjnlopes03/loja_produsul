@@ -111,3 +111,44 @@ def test_estornos_concorrentes_da_mesma_movimentacao_so_aplicam_uma_vez(
 
     produto_final = client_multithread.get(f"/produtos/{produto['id']}").json()
     assert produto_final["quantidade_estoque"] == 5
+
+
+def test_movimentacao_registrada_na_tela_tem_origem_manual(client: TestClient) -> None:
+    marca_id = _criar_marca(client)
+    produto = _criar_produto(client, marca_id)
+
+    mov = client.post(
+        "/movimentacoes/", json={"produto_id": produto["id"], "tipo": "entrada", "quantidade": 2}
+    ).json()
+
+    assert mov["origem"] == "manual"
+
+
+def test_estornar_movimentacao_gerada_por_compra_retorna_400(client: TestClient) -> None:
+    marca_id = _criar_marca(client)
+    produto = _criar_produto(client, marca_id, quantidade_estoque=5)
+    cliente_id = client.post("/clientes/", json={"nome": "Fulano"}).json()["id"]
+    client.post(f"/clientes/{cliente_id}/compras", json={"produto_id": produto["id"], "quantidade": 2})
+    mov_da_compra = client.get("/movimentacoes/").json()[0]
+    assert mov_da_compra["origem"] == "compra"
+
+    resposta = client.post(f"/movimentacoes/{mov_da_compra['id']}/estornar")
+
+    # A venda só se desfaz pela conta do cliente; aqui a ração voltaria ao estoque com a compra ainda cobrada.
+    assert resposta.status_code == 400
+    assert client.get(f"/produtos/{produto['id']}").json()["quantidade_estoque"] == 3
+
+
+def test_estornar_um_estorno_retorna_400(client: TestClient) -> None:
+    marca_id = _criar_marca(client)
+    produto = _criar_produto(client, marca_id, quantidade_estoque=5)
+    mov = client.post(
+        "/movimentacoes/", json={"produto_id": produto["id"], "tipo": "entrada", "quantidade": 3}
+    ).json()
+    estorno = client.post(f"/movimentacoes/{mov['id']}/estornar").json()
+    assert estorno["origem"] == "estorno"
+
+    resposta = client.post(f"/movimentacoes/{estorno['id']}/estornar")
+
+    assert resposta.status_code == 400
+    assert client.get(f"/produtos/{produto['id']}").json()["quantidade_estoque"] == 5

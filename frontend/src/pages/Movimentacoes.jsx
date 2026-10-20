@@ -156,6 +156,10 @@ export default function Movimentacoes() {
                   <td className="acoes">
                     {m.estornado_em ? (
                       <span className="badge badge-muted">Estornada</span>
+                    ) : m.origem === "compra" ? (
+                      <span className="badge badge-muted">Venda</span>
+                    ) : m.origem === "estorno" ? (
+                      <span className="badge badge-muted">Estorno</span>
                     ) : (
                       <button className="btn-danger" onClick={() => estornar(m.id)}>
                         Estornar

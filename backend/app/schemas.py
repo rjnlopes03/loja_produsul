@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .models import Especie, FaseVida, StatusPagamento, TipoMovimentacao
+from .models import Especie, FaseVida, OrigemMovimentacao, StatusPagamento, TipoMovimentacao
 
 
 class MarcaBase(BaseModel):
@@ -25,13 +25,16 @@ class ProdutoBase(BaseModel):
     especie: Especie
     fase_vida: FaseVida
     castrado: Optional[bool] = None
-    peso_kg: float = Field(gt=0)
-    preco: float = Field(gt=0)
-    quantidade_estoque: int = Field(default=0, ge=0)
+    peso_kg: float
+    preco: float
+    quantidade_estoque: int = 0
 
 
 class ProdutoCreate(ProdutoBase):
-    pass
+    # As restrições ficam só na entrada: produtos gravados antes delas não podem derrubar as listagens.
+    peso_kg: float = Field(gt=0)
+    preco: float = Field(gt=0)
+    quantidade_estoque: int = Field(default=0, ge=0)
 
 
 class ProdutoUpdate(BaseModel):
@@ -63,6 +66,7 @@ class Movimentacao(MovimentacaoCreate):
     criado_em: datetime
     estornado_em: Optional[datetime] = None
     estorno_de_id: Optional[int] = None
+    origem: OrigemMovimentacao
     produto: Produto
 
 
