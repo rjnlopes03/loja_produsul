@@ -17,6 +17,7 @@ router = APIRouter(prefix="/clientes", tags=["clientes"])
 # Horário de Brasília (sem horário de verão desde 2019).
 FUSO_LOJA = timezone(timedelta(hours=-3))
 CENTAVO = 0.005
+CONFLITO_COMPRA = "A compra foi alterada por outra ação. Recarregue a página."
 
 
 def _data_local(momento: datetime) -> date:
@@ -241,15 +242,20 @@ def registrar_compra(cliente_id: int, compra: schemas.CompraCreate, db: Session 
 @router.post("/{cliente_id}/compras/{compra_id}/estornar", response_model=schemas.Compra)
 def estornar_compra(cliente_id: int, compra_id: int, db: Session = Depends(get_db)):
     compra = _obter_compra(db, cliente_id, compra_id)
-    if not marcar_estornado(db, models.Compra, compra_id):
+    if compra.estornado_em is not None:
         raise HTTPException(status_code=400, detail="Compra já foi estornada")
+    produto_id, quantidade = compra.produto_id, compra.quantidade
+    # A quantidade lida entra na condição: se outra ação mudou a compra nesse meio-tempo,
+    # nada é marcado e o estoque não recebe uma quantidade desatualizada.
+    if not marcar_estornado(db, models.Compra, compra_id, models.Compra.quantidade == quantidade):
+        raise HTTPException(status_code=409, detail=CONFLITO_COMPRA)
 
-    ajustar_estoque(db, compra.produto_id, models.TipoMovimentacao.ENTRADA, compra.quantidade)
+    ajustar_estoque(db, produto_id, models.TipoMovimentacao.ENTRADA, quantidade)
     db.add(
         models.Movimentacao(
-            produto_id=compra.produto_id,
+            produto_id=produto_id,
             tipo=models.TipoMovimentacao.ENTRADA,
-            quantidade=compra.quantidade,
+            quantidade=quantidade,
             origem=models.OrigemMovimentacao.COMPRA,
         )
     )
@@ -278,7 +284,7 @@ def atualizar_compra(cliente_id: int, compra_id: int, compra: schemas.CompraUpda
             .values(quantidade=compra.quantidade)
         )
         if resultado.rowcount == 0:
-            raise HTTPException(status_code=409, detail="A compra foi alterada por outra ação. Recarregue a página.")
+            raise HTTPException(status_code=409, detail=CONFLITO_COMPRA)
         tipo = models.TipoMovimentacao.SAIDA if diferenca > 0 else models.TipoMovimentacao.ENTRADA
         if not ajustar_estoque(db, db_compra.produto_id, tipo, abs(diferenca)):
             raise HTTPException(status_code=400, detail="Estoque insuficiente")
@@ -300,13 +306,17 @@ def atualizar_compra(cliente_id: int, compra_id: int, compra: schemas.CompraUpda
 def excluir_compra(cliente_id: int, compra_id: int, db: Session = Depends(get_db)):
     db_compra = _obter_compra_ativa(db, cliente_id, compra_id)
     produto_id, quantidade = db_compra.produto_id, db_compra.quantidade
-    # Checagem e exclusão num único DELETE: com dois pedidos simultâneos (ou um estorno),
-    # só um apaga a compra e devolve a ração ao estoque.
+    # Checagem e exclusão num único DELETE: com dois pedidos simultâneos (ou um estorno, ou uma
+    # edição da quantidade), só um vence e o estoque recebe a quantidade que estava gravada.
     resultado = db.execute(
-        delete(models.Compra).where(models.Compra.id == compra_id, models.Compra.estornado_em.is_(None))
+        delete(models.Compra).where(
+            models.Compra.id == compra_id,
+            models.Compra.estornado_em.is_(None),
+            models.Compra.quantidade == quantidade,
+        )
     )
     if resultado.rowcount == 0:
-        raise HTTPException(status_code=400, detail="Compra já foi estornada ou excluída")
+        raise HTTPException(status_code=409, detail=CONFLITO_COMPRA)
     db.expunge(db_compra)
     ajustar_estoque(db, produto_id, models.TipoMovimentacao.ENTRADA, quantidade)
     db.add(
