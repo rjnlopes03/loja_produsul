@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api/client.js";
 import { classificarSaldo, formatarMoeda } from "../format.js";
 import { useApiData } from "../hooks/useApiData.js";
+import { STATUS_PAGAMENTO } from "../constants.js";
 
 export default function Clientes() {
   const [nome, setNome] = useState("");
@@ -42,7 +43,7 @@ export default function Clientes() {
         <div className="hero-top">
           <div>
             <h2>Clientes</h2>
-            <p>Contas de clientes: compras registradas na conta e pagamentos recebidos.</p>
+            <p>Contas de clientes: clique em "Abrir conta" para lançar compras, pagamentos e editar os dados.</p>
           </div>
         </div>
       </div>
@@ -69,6 +70,7 @@ export default function Clientes() {
             <thead>
               <tr>
                 <th>Cliente</th>
+                <th>Status</th>
                 <th>Saldo devedor</th>
                 <th></th>
               </tr>
@@ -82,6 +84,15 @@ export default function Clientes() {
                     <Link className="link-nome" to={`/clientes/${c.id}`}>
                       {c.nome}
                     </Link>
+                    {c.telefone && <div className="dica">{c.telefone}</div>}
+                  </td>
+                  <td>
+                    <span className={`badge ${STATUS_PAGAMENTO[c.status].badge}`}>
+                      {STATUS_PAGAMENTO[c.status].label}
+                    </span>
+                    {c.valor_vencido > 0 && (
+                      <div className="dica">R$ {c.valor_vencido.toFixed(2)} vencido</div>
+                    )}
                   </td>
                   <td>
                     {situacao === "devedor" ? (
@@ -91,8 +102,12 @@ export default function Clientes() {
                     ) : (
                       <span className="badge badge-ok">R$ 0.00</span>
                     )}
+                    {c.acima_do_limite && <div className="dica">Acima do limite</div>}
                   </td>
                   <td className="acoes">
+                    <Link className="link-editar" to={`/clientes/${c.id}`}>
+                      Abrir conta
+                    </Link>
                     <button className="btn-danger" onClick={() => excluir(c.id)}>
                       Excluir
                     </button>
@@ -102,7 +117,7 @@ export default function Clientes() {
               })}
               {clientes.length === 0 && (
                 <tr>
-                  <td className="vazio" colSpan={3}>
+                  <td className="vazio" colSpan={4}>
                     Nenhum cliente cadastrado.
                   </td>
                 </tr>
