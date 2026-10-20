@@ -91,7 +91,7 @@ export default function Clientes() {
                       {STATUS_PAGAMENTO[c.status].label}
                     </span>
                     {c.valor_vencido > 0 && (
-                      <div className="dica">R$ {c.valor_vencido.toFixed(2)} vencido</div>
+                      <div className="dica">{formatarMoeda(c.valor_vencido)} vencido</div>
                     )}
                   </td>
                   <td>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client.js";
 import { classificarSaldo, formatarMoeda } from "../format.js";
+import { useApiData } from "../hooks/useApiData.js";
 import { STATUS_PAGAMENTO } from "../constants.js";
 
 const pad = (n) => String(n).padStart(2, "0");
@@ -156,32 +157,23 @@ function LinhaPagamento({ pagamento, onSalvar, onExcluir }) {
 
 export default function ClienteDetalhe() {
   const { id } = useParams();
-  const [resumo, setResumo] = useState(null);
   const [produtos, setProdutos] = useState([]);
   const [compraForm, setCompraForm] = useState({ produto_id: "", quantidade: "", data: dataISO() });
   const [pagamentoForm, setPagamentoForm] = useState({ valor: "", data: dataISO() });
   const [dadosForm, setDadosForm] = useState(null);
-  const [erro, setErro] = useState("");
-  const [carregando, setCarregando] = useState(true);
-
-  function carregar() {
-    return api
-      .obterResumoCliente(id)
-      .then((dados) => {
-        setResumo(dados);
-        setErro("");
-      })
-      .catch((e) => setErro(e.message))
-      .finally(() => setCarregando(false));
-  }
+  const {
+    dados: resumo,
+    carregando,
+    erro,
+    setErro,
+    carregar,
+  } = useApiData(() => api.obterResumoCliente(id), [id], null);
 
   function carregarProdutos() {
     api.listarProdutos().then(setProdutos).catch((e) => setErro(e.message));
   }
 
   useEffect(() => {
-    setCarregando(true);
-    carregar();
     carregarProdutos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -191,7 +183,7 @@ export default function ClienteDetalhe() {
     setErro("");
     try {
       await acao();
-      await carregar();
+      await carregar({ silencioso: true });
       if (estoque) carregarProdutos();
       return true;
     } catch (e) {
@@ -304,7 +296,7 @@ export default function ClienteDetalhe() {
                   {cliente.status_manual
                     ? "definido manualmente"
                     : valor_vencido > 0
-                      ? `R$ ${valor_vencido.toFixed(2)} vencido`
+                      ? `${formatarMoeda(valor_vencido)} vencido`
                       : proximo_vencimento
                         ? `vence em ${formatarDia(proximo_vencimento)}`
                         : cliente.dia_vencimento
