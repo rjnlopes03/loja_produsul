@@ -86,7 +86,7 @@ export default function Clientes() {
                     </Link>
                     {c.telefone && <div className="dica">{c.telefone}</div>}
                   </td>
-                  <td>
+                  <td data-label="Status">
                     <span className={`badge ${STATUS_PAGAMENTO[c.status].badge}`}>
                       {STATUS_PAGAMENTO[c.status].label}
                     </span>
@@ -94,7 +94,7 @@ export default function Clientes() {
                       <div className="dica">{formatarMoeda(c.valor_vencido)} vencido</div>
                     )}
                   </td>
-                  <td>
+                  <td data-label="Saldo devedor">
                     {situacao === "devedor" ? (
                       <span className="badge badge-danger">{formatarMoeda(c.saldo_devedor)}</span>
                     ) : situacao === "credito" ? (

@@ -55,11 +55,11 @@ function LinhaCompra({ compra, onSalvar, onExcluir, onEstornar }) {
   if (!editando) {
     return (
       <tr>
-        <td>{new Date(compra.criado_em).toLocaleDateString("pt-BR")}</td>
+        <td data-label="Data">{new Date(compra.criado_em).toLocaleDateString("pt-BR")}</td>
         <td className="nome-produto">{compra.produto.nome}</td>
-        <td>{compra.quantidade}</td>
-        <td>R$ {compra.preco_unitario.toFixed(2)}</td>
-        <td>R$ {compra.valor_total.toFixed(2)}</td>
+        <td data-label="Quantidade">{compra.quantidade}</td>
+        <td data-label="Preço unit.">R$ {compra.preco_unitario.toFixed(2)}</td>
+        <td data-label="Total">R$ {compra.valor_total.toFixed(2)}</td>
         <td className="acoes">
           {compra.estornado_em ? (
             <span className="badge badge-muted">Estornada</span>
@@ -84,17 +84,17 @@ function LinhaCompra({ compra, onSalvar, onExcluir, onEstornar }) {
   const muda = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target.value }));
   return (
     <tr>
-      <td>
+      <td data-label="Data">
         <input type="date" required value={form.data} onChange={muda("data")} />
       </td>
       <td className="nome-produto">{compra.produto.nome}</td>
-      <td>
+      <td data-label="Quantidade">
         <input type="number" min="1" value={form.quantidade} onChange={muda("quantidade")} />
       </td>
-      <td>
+      <td data-label="Preço unit.">
         <input type="number" min="0" step="0.01" value={form.preco_unitario} onChange={muda("preco_unitario")} />
       </td>
-      <td>R$ {(Number(form.quantidade) * Number(form.preco_unitario) || 0).toFixed(2)}</td>
+      <td data-label="Total">R$ {(Number(form.quantidade) * Number(form.preco_unitario) || 0).toFixed(2)}</td>
       <td className="acoes">
         <button onClick={salvar}>Salvar</button>
         <button className="btn-sec" onClick={() => setEditando(false)}>
@@ -122,8 +122,8 @@ function LinhaPagamento({ pagamento, onSalvar, onExcluir }) {
   if (!editando) {
     return (
       <tr>
-        <td>{new Date(pagamento.criado_em).toLocaleDateString("pt-BR")}</td>
-        <td>R$ {pagamento.valor.toFixed(2)}</td>
+        <td data-label="Data">{new Date(pagamento.criado_em).toLocaleDateString("pt-BR")}</td>
+        <td data-label="Valor">R$ {pagamento.valor.toFixed(2)}</td>
         <td className="acoes">
           <button className="btn-sec" onClick={editar}>
             Editar
@@ -139,10 +139,10 @@ function LinhaPagamento({ pagamento, onSalvar, onExcluir }) {
   const muda = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target.value }));
   return (
     <tr>
-      <td>
+      <td data-label="Data">
         <input type="date" required value={form.data} onChange={muda("data")} />
       </td>
-      <td>
+      <td data-label="Valor">
         <input type="number" min="0.01" step="0.01" value={form.valor} onChange={muda("valor")} />
       </td>
       <td className="acoes">

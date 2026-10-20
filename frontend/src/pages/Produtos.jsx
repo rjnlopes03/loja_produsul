@@ -243,8 +243,8 @@ export default function Produtos() {
               {produtos.map((p) => (
                 <tr key={p.id}>
                   <td className="nome-produto">{p.nome}</td>
-                  <td>{p.marca.nome}</td>
-                  <td>
+                  <td data-label="Marca">{p.marca.nome}</td>
+                  <td data-label="Animal">
                     <div className="especie-cell">
                       <span
                         className="especie-avatar"
@@ -258,8 +258,8 @@ export default function Produtos() {
                       <span className="capitalize">{p.especie}</span>
                     </div>
                   </td>
-                  <td className="capitalize">{p.fase_vida}</td>
-                  <td>
+                  <td data-label="Fase" className="capitalize">{p.fase_vida}</td>
+                  <td data-label="Castrado">
                     {p.especie === "gato" && p.castrado !== null && p.castrado !== undefined ? (
                       <span className={`badge ${p.castrado ? "badge-ok" : "badge-muted"}`}>
                         {p.castrado ? "Sim" : "Não"}
@@ -268,9 +268,9 @@ export default function Produtos() {
                       "—"
                     )}
                   </td>
-                  <td>{p.peso_kg}</td>
-                  <td>R$ {p.preco.toFixed(2)}</td>
-                  <td>
+                  <td data-label="Peso (kg)">{p.peso_kg}</td>
+                  <td data-label="Preço">R$ {p.preco.toFixed(2)}</td>
+                  <td data-label="Estoque">
                     {p.quantidade_estoque <= 5 ? (
                       <span className="badge badge-danger">{p.quantidade_estoque} un.</span>
                     ) : (
