@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .models import Especie, FaseVida, StatusPagamento, TipoMovimentacao
+from .models import Especie, FaseVida, OrigemMovimentacao, StatusPagamento, TipoMovimentacao
 
 
 class MarcaBase(BaseModel):
@@ -63,6 +63,7 @@ class Movimentacao(MovimentacaoCreate):
     criado_em: datetime
     estornado_em: Optional[datetime] = None
     estorno_de_id: Optional[int] = None
+    origem: OrigemMovimentacao
     produto: Produto
 
 

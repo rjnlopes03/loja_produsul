@@ -215,7 +215,14 @@ def registrar_compra(cliente_id: int, compra: schemas.CompraCreate, db: Session 
     if not ajustar_estoque(db, compra.produto_id, models.TipoMovimentacao.SAIDA, compra.quantidade):
         raise HTTPException(status_code=400, detail="Estoque insuficiente")
 
-    db.add(models.Movimentacao(produto_id=produto.id, tipo=models.TipoMovimentacao.SAIDA, quantidade=compra.quantidade))
+    db.add(
+        models.Movimentacao(
+            produto_id=produto.id,
+            tipo=models.TipoMovimentacao.SAIDA,
+            quantidade=compra.quantidade,
+            origem=models.OrigemMovimentacao.COMPRA,
+        )
+    )
 
     db_compra = models.Compra(
         cliente_id=cliente_id,
@@ -243,6 +250,7 @@ def estornar_compra(cliente_id: int, compra_id: int, db: Session = Depends(get_d
             produto_id=compra.produto_id,
             tipo=models.TipoMovimentacao.ENTRADA,
             quantidade=compra.quantidade,
+            origem=models.OrigemMovimentacao.COMPRA,
         )
     )
 
@@ -274,7 +282,9 @@ def atualizar_compra(cliente_id: int, compra_id: int, compra: schemas.CompraUpda
         tipo = models.TipoMovimentacao.SAIDA if diferenca > 0 else models.TipoMovimentacao.ENTRADA
         if not ajustar_estoque(db, db_compra.produto_id, tipo, abs(diferenca)):
             raise HTTPException(status_code=400, detail="Estoque insuficiente")
-        db.add(models.Movimentacao(produto_id=db_compra.produto_id, tipo=tipo, quantidade=abs(diferenca)))
+        db.add(
+            models.Movimentacao(produto_id=db_compra.produto_id, tipo=tipo, quantidade=abs(diferenca), origem=models.OrigemMovimentacao.COMPRA)
+        )
 
     if compra.preco_unitario is not None:
         db_compra.preco_unitario = compra.preco_unitario
@@ -299,7 +309,11 @@ def excluir_compra(cliente_id: int, compra_id: int, db: Session = Depends(get_db
         raise HTTPException(status_code=400, detail="Compra já foi estornada ou excluída")
     db.expunge(db_compra)
     ajustar_estoque(db, produto_id, models.TipoMovimentacao.ENTRADA, quantidade)
-    db.add(models.Movimentacao(produto_id=produto_id, tipo=models.TipoMovimentacao.ENTRADA, quantidade=quantidade))
+    db.add(
+        models.Movimentacao(
+            produto_id=produto_id, tipo=models.TipoMovimentacao.ENTRADA, quantidade=quantidade, origem=models.OrigemMovimentacao.COMPRA
+        )
+    )
     db.commit()
 
 
