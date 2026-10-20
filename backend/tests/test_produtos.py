@@ -192,3 +192,24 @@ def test_excluir_produto_forcado_com_compra_continua_bloqueado(client: TestClien
 
     assert resposta.status_code == 400
     assert "compra" in resposta.json()["detail"].lower()
+
+
+def test_listagens_nao_quebram_com_produto_antigo_fora_das_validacoes_novas(client: TestClient) -> None:
+    from sqlalchemy import text
+
+    from app.database import get_db
+    from app.main import app
+
+    marca_id = client.post("/marcas/", json={"nome": "Golden"}).json()["id"]
+    produto = client.post(
+        "/produtos/",
+        json={"nome": "Antiga", "marca_id": marca_id, "especie": "cachorro", "fase_vida": "adulto",
+              "peso_kg": 10.0, "preco": 50.0, "quantidade_estoque": 1},
+    ).json()
+    # Dados gravados antes das validações de entrada (preço 0, estoque negativo) continuam no banco.
+    db = next(app.dependency_overrides[get_db]())
+    db.execute(text("UPDATE produtos SET preco = 0, quantidade_estoque = -2 WHERE id = :id"), {"id": produto["id"]})
+    db.commit()
+
+    assert client.get("/produtos/").status_code == 200
+    assert client.get(f"/produtos/{produto['id']}").status_code == 200
