@@ -2,12 +2,11 @@
 Testes da rota de clientes.
 
 Responsabilidades:
-- Garantir que o resumo do cliente reutiliza a mesma função de cálculo
-  de saldo devedor usada na listagem, evitando duas fontes de verdade.
+- Garantir que o resumo e a listagem de clientes calculam o mesmo saldo
+  devedor, evitando duas fontes de verdade.
 - Cobrir o bloqueio de exclusão de cliente com compras/pagamentos.
 - Cobrir o estorno de compras e seu efeito no saldo e no estoque.
 """
-from unittest.mock import ANY, patch
 
 from fastapi.testclient import TestClient
 
@@ -52,15 +51,38 @@ def test_excluir_cliente_com_pagamento_retorna_400(client: TestClient) -> None:
     assert "compras ou pagamentos" in resposta.json()["detail"].lower()
 
 
-def test_resumo_cliente_reutiliza_saldo_devedor_compartilhado(client: TestClient) -> None:
+def test_resumo_e_listagem_calculam_o_mesmo_saldo_devedor(client: TestClient) -> None:
+    produto = _criar_produto(client, quantidade_estoque=10, preco=50.0)
     cliente_id = _criar_cliente(client)
+    client.post(f"/clientes/{cliente_id}/compras", json={"produto_id": produto["id"], "quantidade": 3})
+    estornada = client.post(
+        f"/clientes/{cliente_id}/compras", json={"produto_id": produto["id"], "quantidade": 1}
+    ).json()
+    client.post(f"/clientes/{cliente_id}/compras/{estornada['id']}/estornar")
+    client.post(f"/clientes/{cliente_id}/pagamentos", json={"valor": 40.0})
 
-    with patch("app.routers.clientes._saldo_devedor", return_value=12345.0) as mock_saldo:
-        resposta = client.get(f"/clientes/{cliente_id}/resumo")
+    resumo = client.get(f"/clientes/{cliente_id}/resumo").json()
+    listado = next(c for c in client.get("/clientes/").json() if c["id"] == cliente_id)
 
-    assert resposta.status_code == 200
-    assert resposta.json()["saldo_devedor"] == 12345.0
-    mock_saldo.assert_called_once_with(ANY, cliente_id)
+    assert resumo["saldo_devedor"] == 110.0
+    assert listado["saldo_devedor"] == resumo["saldo_devedor"]
+
+
+def test_editar_ou_excluir_compra_estornada_retorna_400(client: TestClient) -> None:
+    produto = _criar_produto(client, quantidade_estoque=10, preco=50.0)
+    cliente_id = _criar_cliente(client)
+    compra = client.post(
+        f"/clientes/{cliente_id}/compras", json={"produto_id": produto["id"], "quantidade": 3}
+    ).json()
+    client.post(f"/clientes/{cliente_id}/compras/{compra['id']}/estornar")
+
+    editar = client.put(f"/clientes/{cliente_id}/compras/{compra['id']}", json={"quantidade": 1})
+    excluir = client.delete(f"/clientes/{cliente_id}/compras/{compra['id']}")
+
+    assert editar.status_code == 400
+    assert excluir.status_code == 400
+    # O estorno devolveu as 3 unidades uma única vez.
+    assert client.get(f"/produtos/{produto['id']}").json()["quantidade_estoque"] == 10
 
 
 def test_estornar_compra_devolve_estoque_e_zera_saldo(client: TestClient) -> None:
