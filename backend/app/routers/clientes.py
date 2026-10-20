@@ -3,6 +3,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import delete, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
@@ -257,11 +258,23 @@ def atualizar_compra(cliente_id: int, compra_id: int, compra: schemas.CompraUpda
     if compra.quantidade is not None and compra.quantidade != db_compra.quantidade:
         # A diferença sai do (ou volta ao) estoque, com a movimentação correspondente.
         diferenca = compra.quantidade - db_compra.quantidade
+        # Só grava se a compra ainda está como foi lida: outra edição, exclusão ou estorno
+        # simultâneo faria a diferença ser aplicada ao estoque duas vezes.
+        resultado = db.execute(
+            update(models.Compra)
+            .where(
+                models.Compra.id == compra_id,
+                models.Compra.quantidade == db_compra.quantidade,
+                models.Compra.estornado_em.is_(None),
+            )
+            .values(quantidade=compra.quantidade)
+        )
+        if resultado.rowcount == 0:
+            raise HTTPException(status_code=409, detail="A compra foi alterada por outra ação. Recarregue a página.")
         tipo = models.TipoMovimentacao.SAIDA if diferenca > 0 else models.TipoMovimentacao.ENTRADA
         if not ajustar_estoque(db, db_compra.produto_id, tipo, abs(diferenca)):
             raise HTTPException(status_code=400, detail="Estoque insuficiente")
         db.add(models.Movimentacao(produto_id=db_compra.produto_id, tipo=tipo, quantidade=abs(diferenca)))
-        db_compra.quantidade = compra.quantidade
 
     if compra.preco_unitario is not None:
         db_compra.preco_unitario = compra.preco_unitario
@@ -276,14 +289,17 @@ def atualizar_compra(cliente_id: int, compra_id: int, compra: schemas.CompraUpda
 @router.delete("/{cliente_id}/compras/{compra_id}", status_code=204)
 def excluir_compra(cliente_id: int, compra_id: int, db: Session = Depends(get_db)):
     db_compra = _obter_compra_ativa(db, cliente_id, compra_id)
-    # A ração volta ao estoque.
-    ajustar_estoque(db, db_compra.produto_id, models.TipoMovimentacao.ENTRADA, db_compra.quantidade)
-    db.add(
-        models.Movimentacao(
-            produto_id=db_compra.produto_id, tipo=models.TipoMovimentacao.ENTRADA, quantidade=db_compra.quantidade
-        )
+    produto_id, quantidade = db_compra.produto_id, db_compra.quantidade
+    # Checagem e exclusão num único DELETE: com dois pedidos simultâneos (ou um estorno),
+    # só um apaga a compra e devolve a ração ao estoque.
+    resultado = db.execute(
+        delete(models.Compra).where(models.Compra.id == compra_id, models.Compra.estornado_em.is_(None))
     )
-    db.delete(db_compra)
+    if resultado.rowcount == 0:
+        raise HTTPException(status_code=400, detail="Compra já foi estornada ou excluída")
+    db.expunge(db_compra)
+    ajustar_estoque(db, produto_id, models.TipoMovimentacao.ENTRADA, quantidade)
+    db.add(models.Movimentacao(produto_id=produto_id, tipo=models.TipoMovimentacao.ENTRADA, quantidade=quantidade))
     db.commit()
 
 
