@@ -135,3 +135,27 @@ def test_resumo_cliente_mantem_compra_estornada_visivel_mas_fora_do_total(
     assert resumo["compras"][0]["estornado_em"] is not None
     assert resumo["total_compras"] == 0
     assert resumo["saldo_devedor"] == 0
+
+
+def test_editar_quantidade_da_compra_acerta_estoque_e_gera_movimentacao(client: TestClient) -> None:
+    produto = _criar_produto(client, quantidade_estoque=10, preco=50.0)
+    cliente_id = _criar_cliente(client)
+    compra = client.post(
+        f"/clientes/{cliente_id}/compras", json={"produto_id": produto["id"], "quantidade": 3}
+    ).json()
+
+    aumentar = client.put(f"/clientes/{cliente_id}/compras/{compra['id']}", json={"quantidade": 5})
+    assert aumentar.status_code == 200
+    assert aumentar.json()["quantidade"] == 5
+    assert client.get(f"/produtos/{produto['id']}").json()["quantidade_estoque"] == 5
+
+    diminuir = client.put(f"/clientes/{cliente_id}/compras/{compra['id']}", json={"quantidade": 1})
+    assert diminuir.status_code == 200
+    assert client.get(f"/produtos/{produto['id']}").json()["quantidade_estoque"] == 9
+
+    sem_estoque = client.put(f"/clientes/{cliente_id}/compras/{compra['id']}", json={"quantidade": 50})
+    assert sem_estoque.status_code == 400
+    assert client.get(f"/produtos/{produto['id']}").json()["quantidade_estoque"] == 9
+
+    tipos = [m["tipo"] for m in client.get("/movimentacoes/").json()]
+    assert sorted(tipos) == ["entrada", "saida", "saida"]
