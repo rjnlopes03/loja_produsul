@@ -49,6 +49,9 @@ body {
   background: var(--cream);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  /* Com viewport-fit=cover, o iPhone deitado desenha sob o entalhe; os insets valem 0 nos demais casos. */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 h1,
@@ -461,7 +464,7 @@ select.filtro-select:focus {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
-  /* Em telas médias a tabela rola dentro do quadro, sem empurrar a página. */
+  /* Tabela mais larga que a tela (tablet ou janela estreita) rola dentro do quadro, sem empurrar a página. */
   overflow-x: auto;
   margin-bottom: 1.5rem;
 }
