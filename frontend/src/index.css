@@ -157,6 +157,10 @@ h3 {
   box-shadow: 0 4px 12px rgba(209, 89, 31, 0.45);
 }
 
+.rotulo-curto {
+  display: none;
+}
+
 .topbar-tag {
   font-size: 0.76rem;
   color: rgba(255, 255, 255, 0.55);
@@ -457,7 +461,8 @@ select.filtro-select:focus {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  /* Em telas médias a tabela rola dentro do quadro, sem empurrar a página. */
+  overflow-x: auto;
   margin-bottom: 1.5rem;
 }
 
@@ -811,6 +816,8 @@ button:active,
   padding: 1.5rem 0;
 }
 
+/* ---------- tablet ---------- */
+
 @media (max-width: 860px) {
   .topbar-inner {
     flex-wrap: wrap;
@@ -818,14 +825,19 @@ button:active,
     gap: 0.75rem;
   }
 
+  /* flex-basis 100% (e não só width) para o menu descer para uma linha própria */
   .topbar nav {
     order: 3;
-    width: 100%;
+    flex: 1 1 100%;
     overflow-x: auto;
   }
 
   .topbar-tag {
     display: none;
+  }
+
+  .topbar-sair {
+    margin-left: auto;
   }
 
   .content {
@@ -838,5 +850,277 @@ button:active,
 
   .hero::after {
     display: none;
+  }
+
+  .topbar nav a {
+    min-height: 44px;
+  }
+
+  /* Valores (R$, datas, quantidades) numa linha só; a tabela rola dentro do quadro. */
+  .tabela td {
+    white-space: nowrap;
+  }
+
+  .tabela td.nome-produto {
+    min-width: 11rem;
+    white-space: normal;
+  }
+
+  /* Alvos de toque com pelo menos 44px; fonte de 16px nos campos evita o zoom automático do iOS. */
+  button,
+  .btn,
+  .acoes a.link-editar,
+  .pill,
+  select.filtro-select {
+    min-height: 44px;
+  }
+
+  .acoes a.link-editar {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .form input,
+  .form select,
+  .form textarea,
+  .form-inline input,
+  .tabela input,
+  select.filtro-select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+}
+
+/* ---------- celular ---------- */
+
+@media (max-width: 640px) {
+  .topbar-inner {
+    padding: 0.7rem 1rem;
+  }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+
+  /* O menu vira uma barra de abas fixa no rodapé, ao alcance do polegar. */
+  .topbar nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    gap: 0;
+    overflow: visible;
+    padding: 0.35rem 0.25rem calc(0.35rem + env(safe-area-inset-bottom));
+    background: var(--brand-900);
+    box-shadow: 0 -2px 12px rgba(12, 51, 25, 0.25);
+  }
+
+  .topbar nav a {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 52px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0.3rem 0.15rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.66rem;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topbar nav a svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .topbar nav a.active {
+    box-shadow: none;
+  }
+
+  .rotulo-longo {
+    display: none;
+  }
+
+  .rotulo-curto {
+    display: inline;
+  }
+
+  /* Espaço para o conteúdo não ficar escondido atrás da barra de abas. */
+  .content {
+    padding: 1rem 1rem calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
+  .hero {
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .hero h2 {
+    font-size: 1.3rem;
+  }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .stat-chip {
+    padding: 0.5rem 0.7rem;
+    min-width: 0;
+  }
+}
+
+/* ---------- celular: tabelas viram cartões ---------- */
+
+@media (max-width: 640px) {
+  .tabela-wrap {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .tabela thead {
+    display: none;
+  }
+
+  .tabela,
+  .tabela tbody {
+    display: block;
+  }
+
+  .tabela tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .tabela tbody tr:hover {
+    background: var(--surface);
+  }
+
+  /* Cada célula: rótulo (data-label) à esquerda, valor à direita. */
+  .tabela td {
+    white-space: normal;
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    column-gap: 0.75rem;
+    align-items: center;
+    padding: 0;
+    border: none;
+    font-size: 0.92rem;
+  }
+
+  .tabela td::before {
+    content: attr(data-label);
+    grid-row: 1 / span 2;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-faint);
+  }
+
+  .tabela td > * {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  /* O nome vira o título do cartão, sempre em primeiro. */
+  .tabela td.nome-produto {
+    order: -1;
+    display: block;
+    font-size: 1rem;
+    padding-bottom: 0.35rem;
+    margin-bottom: 0.1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tabela td.nome-produto::before,
+  .tabela td.acoes::before,
+  .tabela td.vazio::before {
+    content: none;
+  }
+
+  .tabela td.acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .tabela td.acoes > * {
+    flex: 1 1 0;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .tabela td.acoes .badge {
+    flex: none;
+  }
+
+  .tabela td.vazio {
+    display: block;
+  }
+
+  .tabela input {
+    min-width: 0;
+  }
+}
+
+/* ---------- celular: formulários ---------- */
+
+@media (max-width: 640px) {
+  /* Campo e botão de "Adicionar" dividem a linha; sem o min-width o campo empurra o botão para fora da tela. */
+  .form-inline input {
+    min-width: 0;
+    max-width: none;
+  }
+
+  .form {
+    max-width: none;
+    padding: 1.25rem;
+  }
+
+  .duas-colunas {
+    gap: 1rem;
+  }
+
+  .duas-colunas .form {
+    min-width: 0;
+  }
+
+  .form button[type="submit"] {
+    align-self: stretch;
+  }
+
+  .form-acoes {
+    flex-wrap: wrap;
+  }
+
+  .form-acoes button {
+    flex: 1 1 auto;
+  }
+
+  .lista-marcas {
+    max-width: none;
+  }
+
+  .filtros {
+    gap: 0.85rem;
   }
 }
