@@ -56,13 +56,16 @@ export const api = {
     const qs = params.toString();
     return request(`/produtos/${qs ? `?${qs}` : ""}`);
   },
+  obterProduto: (id) => request(`/produtos/${id}`),
   criarProduto: (produto) => request("/produtos/", { method: "POST", body: JSON.stringify(produto) }),
   atualizarProduto: (id, produto) =>
     request(`/produtos/${id}`, { method: "PUT", body: JSON.stringify(produto) }),
-  excluirProduto: (id) => request(`/produtos/${id}`, { method: "DELETE" }),
+  excluirProduto: (id, { forcar = false } = {}) =>
+    request(`/produtos/${id}${forcar ? "?forcar=true" : ""}`, { method: "DELETE" }),
 
   listarMovimentacoes: () => request("/movimentacoes/"),
   criarMovimentacao: (mov) => request("/movimentacoes/", { method: "POST", body: JSON.stringify(mov) }),
+  estornarMovimentacao: (id) => request(`/movimentacoes/${id}/estornar`, { method: "POST" }),
 
   listarClientes: () => request("/clientes/"),
   criarCliente: (nome) => request("/clientes/", { method: "POST", body: JSON.stringify({ nome }) }),
@@ -71,6 +74,8 @@ export const api = {
   obterResumoCliente: (id) => request(`/clientes/${id}/resumo`),
   criarCompra: (clienteId, compra) =>
     request(`/clientes/${clienteId}/compras`, { method: "POST", body: JSON.stringify(compra) }),
+  estornarCompra: (clienteId, compraId) =>
+    request(`/clientes/${clienteId}/compras/${compraId}/estornar`, { method: "POST" }),
   atualizarCompra: (clienteId, compraId, compra) =>
     request(`/clientes/${clienteId}/compras/${compraId}`, { method: "PUT", body: JSON.stringify(compra) }),
   excluirCompra: (clienteId, compraId) =>

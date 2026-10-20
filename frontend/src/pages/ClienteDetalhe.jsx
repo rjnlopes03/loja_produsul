@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client.js";
+import { classificarSaldo, formatarMoeda } from "../format.js";
+import { useApiData } from "../hooks/useApiData.js";
 import { STATUS_PAGAMENTO } from "../constants.js";
 
 const pad = (n) => String(n).padStart(2, "0");
@@ -28,7 +30,7 @@ function dadosDoCliente(cliente) {
   };
 }
 
-function LinhaCompra({ compra, onSalvar, onExcluir }) {
+function LinhaCompra({ compra, onSalvar, onExcluir, onEstornar }) {
   const [editando, setEditando] = useState(false);
   const [form, setForm] = useState({});
 
@@ -59,12 +61,21 @@ function LinhaCompra({ compra, onSalvar, onExcluir }) {
         <td>R$ {compra.preco_unitario.toFixed(2)}</td>
         <td>R$ {compra.valor_total.toFixed(2)}</td>
         <td className="acoes">
-          <button className="btn-sec" onClick={editar}>
-            Editar
-          </button>
-          <button className="btn-danger" onClick={() => onExcluir(compra.id)}>
-            Excluir
-          </button>
+          {compra.estornado_em ? (
+            <span className="badge badge-muted">Estornada</span>
+          ) : (
+            <>
+              <button className="btn-sec" onClick={editar}>
+                Editar
+              </button>
+              <button className="btn-sec" onClick={() => onEstornar(compra.id)}>
+                Estornar
+              </button>
+              <button className="btn-danger" onClick={() => onExcluir(compra.id)}>
+                Excluir
+              </button>
+            </>
+          )}
         </td>
       </tr>
     );
@@ -146,32 +157,23 @@ function LinhaPagamento({ pagamento, onSalvar, onExcluir }) {
 
 export default function ClienteDetalhe() {
   const { id } = useParams();
-  const [resumo, setResumo] = useState(null);
   const [produtos, setProdutos] = useState([]);
   const [compraForm, setCompraForm] = useState({ produto_id: "", quantidade: "", data: dataISO() });
   const [pagamentoForm, setPagamentoForm] = useState({ valor: "", data: dataISO() });
   const [dadosForm, setDadosForm] = useState(null);
-  const [erro, setErro] = useState("");
-  const [carregando, setCarregando] = useState(true);
-
-  function carregar() {
-    return api
-      .obterResumoCliente(id)
-      .then((dados) => {
-        setResumo(dados);
-        setErro("");
-      })
-      .catch((e) => setErro(e.message))
-      .finally(() => setCarregando(false));
-  }
+  const {
+    dados: resumo,
+    carregando,
+    erro,
+    setErro,
+    carregar,
+  } = useApiData(() => api.obterResumoCliente(id), [id], null);
 
   function carregarProdutos() {
-    api.listarProdutos().then(setProdutos).catch(() => {});
+    api.listarProdutos().then(setProdutos).catch((e) => setErro(e.message));
   }
 
   useEffect(() => {
-    setCarregando(true);
-    carregar();
     carregarProdutos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -181,7 +183,7 @@ export default function ClienteDetalhe() {
     setErro("");
     try {
       await acao();
-      await carregar();
+      await carregar({ silencioso: true });
       if (estoque) carregarProdutos();
       return true;
     } catch (e) {
@@ -242,11 +244,17 @@ export default function ClienteDetalhe() {
     executar(() => api.excluirPagamento(id, pagamentoId));
   }
 
+  function estornarCompra(compraId) {
+    if (!confirm("Estornar esta compra? A ração volta para o estoque e a compra sai do saldo.")) return;
+    executar(() => api.estornarCompra(id, compraId), { estoque: true });
+  }
+
   if (carregando) return <p className="carregando">Carregando...</p>;
   if (!resumo) return erro ? <p className="erro">{erro}</p> : null;
 
   const { cliente, compras, pagamentos, saldo_devedor, valor_vencido, proximo_vencimento, status, acima_do_limite } =
     resumo;
+  const situacaoSaldo = classificarSaldo(saldo_devedor);
   const statusInfo = STATUS_PAGAMENTO[status];
   const mudaDados = (campo) => (e) => setDadosForm((f) => ({ ...f, [campo]: e.target.value }));
 
@@ -268,14 +276,14 @@ export default function ClienteDetalhe() {
           <div className="hero-stats">
             <div
               className={`stat-chip ${
-                saldo_devedor > 0 ? "stat-alert" : saldo_devedor < 0 ? "stat-credit" : ""
+                situacaoSaldo === "devedor" ? "stat-alert" : situacaoSaldo === "credito" ? "stat-credit" : ""
               }`}
             >
               <div className="stat-icon">R$</div>
               <div>
-                <strong>R$ {Math.abs(saldo_devedor).toFixed(2)}</strong>
+                <strong>{formatarMoeda(saldo_devedor)}</strong>
                 <span>
-                  {saldo_devedor < 0 ? "crédito do cliente" : "saldo devedor"}
+                  {situacaoSaldo === "credito" ? "crédito do cliente" : "saldo devedor"}
                   {acima_do_limite && " · acima do limite"}
                 </span>
               </div>
@@ -288,7 +296,7 @@ export default function ClienteDetalhe() {
                   {cliente.status_manual
                     ? "definido manualmente"
                     : valor_vencido > 0
-                      ? `R$ ${valor_vencido.toFixed(2)} vencido`
+                      ? `${formatarMoeda(valor_vencido)} vencido`
                       : proximo_vencimento
                         ? `vence em ${formatarDia(proximo_vencimento)}`
                         : cliente.dia_vencimento
@@ -460,7 +468,12 @@ export default function ClienteDetalhe() {
           </thead>
           <tbody>
             {compras.map((c) => (
-              <LinhaCompra key={c.id} compra={c} onSalvar={salvarCompra} onExcluir={excluirCompra} />
+              <LinhaCompra
+                key={c.id}
+                compra={c}
+                onSalvar={salvarCompra} onExcluir={excluirCompra}
+                onEstornar={estornarCompra}
+              />
             ))}
             {compras.length === 0 && (
               <tr>

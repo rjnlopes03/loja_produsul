@@ -55,6 +55,12 @@ class TipoMovimentacao(str, enum.Enum):
     SAIDA = "saida"
 
 
+class OrigemMovimentacao(str, enum.Enum):
+    MANUAL = "manual"
+    COMPRA = "compra"
+    ESTORNO = "estorno"
+
+
 class Movimentacao(Base):
     __tablename__ = "movimentacoes"
 
@@ -63,6 +69,16 @@ class Movimentacao(Base):
     tipo = Column(Enum(TipoMovimentacao, native_enum=False), nullable=False)
     quantidade = Column(Integer, nullable=False)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
+    estornado_em = Column(DateTime(timezone=True), nullable=True)
+    estorno_de_id = Column(Integer, ForeignKey("movimentacoes.id"), nullable=True)
+    # Só as manuais podem ser estornadas na tela de Movimentações; as de compra se desfazem pela conta do cliente.
+    origem = Column(
+        Enum(OrigemMovimentacao, native_enum=False),
+        nullable=False,
+        default=OrigemMovimentacao.MANUAL,
+        # O Enum grava o nome do membro (como em "tipo"), não o valor.
+        server_default=OrigemMovimentacao.MANUAL.name,
+    )
 
     produto = relationship("Produto", back_populates="movimentacoes")
 
@@ -99,6 +115,7 @@ class Compra(Base):
     quantidade = Column(Integer, nullable=False)
     preco_unitario = Column(Float, nullable=False)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
+    estornado_em = Column(DateTime(timezone=True), nullable=True)
 
     cliente = relationship("Cliente", back_populates="compras")
     produto = relationship("Produto")

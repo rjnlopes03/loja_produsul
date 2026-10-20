@@ -1,31 +1,23 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client.js";
+import { useApiData } from "../hooks/useApiData.js";
 
 const vazio = { produto_id: "", tipo: "entrada", quantidade: "" };
 
 export default function Movimentacoes() {
-  const [movimentacoes, setMovimentacoes] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [form, setForm] = useState(vazio);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState("");
-
-  async function carregar() {
-    setCarregando(true);
-    try {
-      const dados = await api.listarMovimentacoes();
-      setMovimentacoes(dados);
-      setErro("");
-    } catch (e) {
-      setErro(e.message);
-    } finally {
-      setCarregando(false);
-    }
-  }
+  const {
+    dados: movimentacoes,
+    carregando,
+    erro,
+    setErro,
+    carregar,
+  } = useApiData(() => api.listarMovimentacoes(), [], []);
 
   useEffect(() => {
-    carregar();
-    api.listarProdutos().then(setProdutos).catch(() => {});
+    api.listarProdutos().then(setProdutos).catch((e) => setErro(e.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function atualizarCampo(campo, valor) {
@@ -45,6 +37,16 @@ export default function Movimentacoes() {
       carregar();
     } catch (e2) {
       setErro(e2.message);
+    }
+  }
+
+  async function estornar(id) {
+    if (!confirm("Estornar esta movimentação?")) return;
+    try {
+      await api.estornarMovimentacao(id);
+      carregar();
+    } catch (e) {
+      setErro(e.message);
     }
   }
 
@@ -136,6 +138,7 @@ export default function Movimentacoes() {
                 <th>Marca</th>
                 <th>Tipo</th>
                 <th>Quantidade</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -150,11 +153,24 @@ export default function Movimentacoes() {
                     </span>
                   </td>
                   <td>{m.quantidade}</td>
+                  <td className="acoes">
+                    {m.estornado_em ? (
+                      <span className="badge badge-muted">Estornada</span>
+                    ) : m.origem === "compra" ? (
+                      <span className="badge badge-muted">Venda</span>
+                    ) : m.origem === "estorno" ? (
+                      <span className="badge badge-muted">Estorno</span>
+                    ) : (
+                      <button className="btn-danger" onClick={() => estornar(m.id)}>
+                        Estornar
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
               {movimentacoes.length === 0 && (
                 <tr>
-                  <td className="vazio" colSpan={5}>
+                  <td className="vazio" colSpan={6}>
                     Nenhuma movimentação registrada.
                   </td>
                 </tr>

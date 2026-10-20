@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from .. import models, schemas
 from ..database import get_db
+from ..validacoes import garantir_sem_referencias
 
 router = APIRouter(prefix="/produtos", tags=["produtos"])
 
@@ -34,7 +35,7 @@ def listar_produtos(
             )
     if castrado is not None:
         query = query.filter(models.Produto.castrado == castrado)
-    if marca_id:
+    if marca_id is not None:
         query = query.filter(models.Produto.marca_id == marca_id)
     return query.order_by(models.Produto.nome).all()
 
@@ -63,6 +64,8 @@ def atualizar_produto(produto_id: int, produto: schemas.ProdutoUpdate, db: Sessi
     db_produto = db.get(models.Produto, produto_id)
     if not db_produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
+    if produto.marca_id is not None and not db.get(models.Marca, produto.marca_id):
+        raise HTTPException(status_code=400, detail="Marca inválida")
     for campo, valor in produto.model_dump(exclude_unset=True).items():
         setattr(db_produto, campo, valor)
     db.commit()
@@ -71,15 +74,26 @@ def atualizar_produto(produto_id: int, produto: schemas.ProdutoUpdate, db: Sessi
 
 
 @router.delete("/{produto_id}", status_code=204)
-def excluir_produto(produto_id: int, db: Session = Depends(get_db)):
+def excluir_produto(produto_id: int, forcar: bool = False, db: Session = Depends(get_db)):
     db_produto = db.get(models.Produto, produto_id)
     if not db_produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
-    tem_compras = db.query(models.Compra).filter(models.Compra.produto_id == produto_id).count() > 0
-    if tem_compras:
-        raise HTTPException(status_code=400, detail="Não é possível excluir: produto possui compras de cliente registradas")
-    tem_movimentacoes = db.query(models.Movimentacao).filter(models.Movimentacao.produto_id == produto_id).count() > 0
-    if tem_movimentacoes:
-        raise HTTPException(status_code=400, detail="Não é possível excluir: produto possui movimentações de estoque registradas")
+    garantir_sem_referencias(
+        db,
+        models.Compra,
+        models.Compra.produto_id,
+        produto_id,
+        "Não é possível excluir: produto possui compras de cliente registradas",
+    )
+    if forcar:
+        db.query(models.Movimentacao).filter(models.Movimentacao.produto_id == produto_id).delete()
+    else:
+        garantir_sem_referencias(
+            db,
+            models.Movimentacao,
+            models.Movimentacao.produto_id,
+            produto_id,
+            "Não é possível excluir: produto possui movimentações de estoque registradas",
+        )
     db.delete(db_produto)
     db.commit()
