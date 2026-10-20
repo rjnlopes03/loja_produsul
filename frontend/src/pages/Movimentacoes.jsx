@@ -144,15 +144,15 @@ export default function Movimentacoes() {
             <tbody>
               {movimentacoes.map((m) => (
                 <tr key={m.id}>
-                  <td>{new Date(m.criado_em).toLocaleString("pt-BR")}</td>
+                  <td data-label="Data">{new Date(m.criado_em).toLocaleString("pt-BR")}</td>
                   <td className="nome-produto">{m.produto.nome}</td>
-                  <td>{m.produto.marca.nome}</td>
-                  <td>
+                  <td data-label="Marca">{m.produto.marca.nome}</td>
+                  <td data-label="Tipo">
                     <span className={`badge ${m.tipo === "entrada" ? "badge-ok" : "badge-rust"}`}>
                       {m.tipo === "entrada" ? "Entrada" : "Saída"}
                     </span>
                   </td>
-                  <td>{m.quantidade}</td>
+                  <td data-label="Quantidade">{m.quantidade}</td>
                   <td className="acoes">
                     {m.estornado_em ? (
                       <span className="badge badge-muted">Estornada</span>

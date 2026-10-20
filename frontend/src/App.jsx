@@ -110,7 +110,8 @@ function App() {
             </NavLink>
             <NavLink to="/movimentacoes">
               <IconMovimentacoes />
-              Movimentações
+              <span className="rotulo-longo">Movimentações</span>
+              <span className="rotulo-curto">Movimentos</span>
             </NavLink>
             <NavLink to="/clientes">
               <IconClientes />
