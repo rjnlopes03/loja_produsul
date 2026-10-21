@@ -114,17 +114,23 @@ def test_atualizar_produto_com_preco_negativo_retorna_422(client: TestClient) ->
     assert resposta.status_code == 422
 
 
-def test_atualizar_produto_ignora_quantidade_estoque_no_payload(client: TestClient) -> None:
+def test_atualizar_produto_altera_quantidade_estoque(client: TestClient) -> None:
     marca_id = _criar_marca(client)
-    produto_id = _criar_produto(client, marca_id, quantidade_estoque=5)
+    produto_id = _criar_produto(client, marca_id, quantidade_estoque=13)
 
-    resposta = client.put(
-        f"/produtos/{produto_id}", json={"quantidade_estoque": 500, "nome": "Outro nome"}
-    )
+    resposta = client.put(f"/produtos/{produto_id}", json={"quantidade_estoque": 5})
 
     assert resposta.status_code == 200
     assert resposta.json()["quantidade_estoque"] == 5
-    assert resposta.json()["nome"] == "Outro nome"
+
+
+def test_atualizar_produto_com_estoque_negativo_retorna_422(client: TestClient) -> None:
+    marca_id = _criar_marca(client)
+    produto_id = _criar_produto(client, marca_id)
+
+    resposta = client.put(f"/produtos/{produto_id}", json={"quantidade_estoque": -1})
+
+    assert resposta.status_code == 422
 
 
 def test_listar_produtos_com_marca_id_zero_filtra_corretamente(client: TestClient) -> None:
