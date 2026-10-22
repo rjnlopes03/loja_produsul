@@ -6,6 +6,8 @@ Responsabilidades:
   devedor, evitando duas fontes de verdade.
 - Cobrir o bloqueio de exclusão de cliente com compras/pagamentos.
 - Cobrir o estorno de compras e seu efeito no saldo e no estoque.
+- Cobrir a situação da conta: pagamentos parciais e excedentes, vencimento
+  (inclusive na virada do ano), status manual e limite de crédito.
 """
 
 from fastapi.testclient import TestClient
@@ -214,3 +216,204 @@ def test_excluir_compra_alterada_por_outra_acao_nao_devolve_quantidade_antiga(
 
     assert resposta.status_code == 409
     assert client.get(f"/produtos/{produto['id']}").json()["quantidade_estoque"] == 7
+
+
+# Datas bem no passado vencem sempre; datas bem no futuro nunca vencem. Assim os testes
+# não dependem do dia em que rodam.
+DATA_VENCIDA = "2020-01-15"
+DATA_A_VENCER = "2099-06-15"
+CAMPOS_SITUACAO = (
+    "saldo_devedor",
+    "valor_vencido",
+    "proximo_vencimento",
+    "status_automatico",
+    "status",
+    "acima_do_limite",
+)
+
+
+def _situacao_conta(client: TestClient, cliente_id: int) -> dict:
+    """Lê a situação da conta pelo resumo e confere que a listagem calcula o mesmo.
+
+    Args:
+        client: Cliente de teste da API.
+        cliente_id: Id do cliente consultado.
+
+    Returns:
+        Os campos de situação da conta, como devolvidos pelo resumo.
+    """
+    resumo = client.get(f"/clientes/{cliente_id}/resumo").json()
+    listado = next(c for c in client.get("/clientes/").json() if c["id"] == cliente_id)
+    situacao = {campo: resumo[campo] for campo in CAMPOS_SITUACAO}
+    assert {campo: listado[campo] for campo in CAMPOS_SITUACAO} == situacao
+    return situacao
+
+
+def _comprar(client: TestClient, cliente_id: int, produto_id: int, quantidade: int, data: str) -> dict:
+    """Registra uma compra com data escolhida e devolve a compra criada.
+
+    Args:
+        client: Cliente de teste da API.
+        cliente_id: Id do cliente comprador.
+        produto_id: Id do produto comprado.
+        quantidade: Quantidade comprada.
+        data: Data da compra (AAAA-MM-DD).
+
+    Returns:
+        A compra criada.
+    """
+    resposta = client.post(
+        f"/clientes/{cliente_id}/compras",
+        json={"produto_id": produto_id, "quantidade": quantidade, "data": data},
+    )
+    assert resposta.status_code == 201
+    return resposta.json()
+
+
+def _pagar(client: TestClient, cliente_id: int, valor: float) -> None:
+    """Registra um pagamento do cliente.
+
+    Args:
+        client: Cliente de teste da API.
+        cliente_id: Id do cliente pagador.
+        valor: Valor pago.
+    """
+    assert client.post(f"/clientes/{cliente_id}/pagamentos", json={"valor": valor}).status_code == 201
+
+
+def _atualizar_cliente(client: TestClient, cliente_id: int, **campos: object) -> None:
+    """Grava campos da conta do cliente (vencimento, limite, status manual).
+
+    Args:
+        client: Cliente de teste da API.
+        cliente_id: Id do cliente alterado.
+        **campos: Campos a gravar.
+    """
+    assert client.put(f"/clientes/{cliente_id}", json=campos).status_code == 200
+
+
+def test_pagamento_parcial_deixa_o_restante_vencido(client: TestClient) -> None:
+    produto = _criar_produto(client, preco=50.0)
+    cliente_id = _criar_cliente(client)
+    _atualizar_cliente(client, cliente_id, dia_vencimento=10)
+    _comprar(client, cliente_id, produto["id"], 2, DATA_VENCIDA)
+    _pagar(client, cliente_id, 40.0)
+
+    situacao = _situacao_conta(client, cliente_id)
+
+    assert situacao["saldo_devedor"] == 60.0
+    assert situacao["valor_vencido"] == 60.0
+    assert situacao["proximo_vencimento"] == "2020-02-10"
+    assert situacao["status"] == "atrasado"
+
+
+def test_pagamento_quita_primeiro_a_compra_mais_antiga(client: TestClient) -> None:
+    produto = _criar_produto(client, preco=50.0)
+    cliente_id = _criar_cliente(client)
+    _atualizar_cliente(client, cliente_id, dia_vencimento=10)
+    # A compra nova é registrada antes, para a ordem ser pela data e não pelo id.
+    _comprar(client, cliente_id, produto["id"], 1, DATA_A_VENCER)
+    _comprar(client, cliente_id, produto["id"], 2, DATA_VENCIDA)
+    _pagar(client, cliente_id, 100.0)
+
+    situacao = _situacao_conta(client, cliente_id)
+
+    assert situacao["saldo_devedor"] == 50.0
+    assert situacao["valor_vencido"] == 0
+    assert situacao["proximo_vencimento"] == "2099-07-10"
+    assert situacao["status"] == "em_dia"
+
+
+def test_pagamento_maior_que_as_compras_vira_credito(client: TestClient) -> None:
+    produto = _criar_produto(client, preco=50.0)
+    cliente_id = _criar_cliente(client)
+    _atualizar_cliente(client, cliente_id, dia_vencimento=10)
+    _comprar(client, cliente_id, produto["id"], 1, DATA_VENCIDA)
+    _pagar(client, cliente_id, 80.0)
+
+    situacao = _situacao_conta(client, cliente_id)
+
+    assert situacao["saldo_devedor"] == -30.0
+    assert situacao["valor_vencido"] == 0
+    assert situacao["proximo_vencimento"] is None
+    assert situacao["status"] == "em_dia"
+
+
+def test_compra_estornada_nao_conta_no_vencimento(client: TestClient) -> None:
+    produto = _criar_produto(client, preco=50.0)
+    cliente_id = _criar_cliente(client)
+    _atualizar_cliente(client, cliente_id, dia_vencimento=10)
+    compra = _comprar(client, cliente_id, produto["id"], 2, DATA_VENCIDA)
+    client.post(f"/clientes/{cliente_id}/compras/{compra['id']}/estornar")
+
+    situacao = _situacao_conta(client, cliente_id)
+
+    assert situacao["saldo_devedor"] == 0
+    assert situacao["valor_vencido"] == 0
+    assert situacao["proximo_vencimento"] is None
+    assert situacao["status"] == "em_dia"
+
+
+def test_compra_de_dezembro_vence_em_janeiro_do_ano_seguinte(client: TestClient) -> None:
+    produto = _criar_produto(client, preco=50.0)
+    a_vencer = _criar_cliente(client)
+    _atualizar_cliente(client, a_vencer, dia_vencimento=5)
+    _comprar(client, a_vencer, produto["id"], 1, "2099-12-20")
+    vencida = _criar_cliente(client, nome="Beltrano")
+    _atualizar_cliente(client, vencida, dia_vencimento=5)
+    _comprar(client, vencida, produto["id"], 1, "2020-12-20")
+
+    situacao_a_vencer = _situacao_conta(client, a_vencer)
+    situacao_vencida = _situacao_conta(client, vencida)
+
+    assert situacao_a_vencer["proximo_vencimento"] == "2100-01-05"
+    assert situacao_a_vencer["status"] == "em_dia"
+    assert situacao_vencida["proximo_vencimento"] == "2021-01-05"
+    assert situacao_vencida["status"] == "atrasado"
+
+
+def test_sem_dia_de_vencimento_a_conta_nunca_atrasa(client: TestClient) -> None:
+    produto = _criar_produto(client, preco=50.0)
+    cliente_id = _criar_cliente(client)
+    _comprar(client, cliente_id, produto["id"], 1, DATA_VENCIDA)
+
+    situacao = _situacao_conta(client, cliente_id)
+
+    assert situacao["saldo_devedor"] == 50.0
+    assert situacao["valor_vencido"] == 0
+    assert situacao["proximo_vencimento"] is None
+    assert situacao["status"] == "em_dia"
+
+
+def test_status_manual_sobrepoe_o_automatico(client: TestClient) -> None:
+    produto = _criar_produto(client, preco=50.0)
+    perdoado = _criar_cliente(client)
+    _atualizar_cliente(client, perdoado, dia_vencimento=10, status_manual="em_dia")
+    _comprar(client, perdoado, produto["id"], 1, DATA_VENCIDA)
+    marcado = _criar_cliente(client, nome="Beltrano")
+    _atualizar_cliente(client, marcado, status_manual="atrasado")
+
+    situacao_perdoado = _situacao_conta(client, perdoado)
+    situacao_marcado = _situacao_conta(client, marcado)
+
+    assert situacao_perdoado["status_automatico"] == "atrasado"
+    assert situacao_perdoado["status"] == "em_dia"
+    assert situacao_marcado["status_automatico"] == "em_dia"
+    assert situacao_marcado["status"] == "atrasado"
+
+
+def test_acima_do_limite_so_quando_o_saldo_passa_do_limite(client: TestClient) -> None:
+    produto = _criar_produto(client, preco=50.0)
+    cliente_id = _criar_cliente(client)
+    _atualizar_cliente(client, cliente_id, limite_credito=100.0)
+    sem_limite = _criar_cliente(client, nome="Beltrano")
+    _comprar(client, sem_limite, produto["id"], 5, DATA_A_VENCER)
+
+    _comprar(client, cliente_id, produto["id"], 2, DATA_A_VENCER)
+    no_limite = _situacao_conta(client, cliente_id)
+    _comprar(client, cliente_id, produto["id"], 1, DATA_A_VENCER)
+    acima = _situacao_conta(client, cliente_id)
+
+    assert no_limite["acima_do_limite"] is False
+    assert acima["acima_do_limite"] is True
+    assert _situacao_conta(client, sem_limite)["acima_do_limite"] is False

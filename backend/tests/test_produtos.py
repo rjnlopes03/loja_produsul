@@ -4,6 +4,7 @@ Testes da rota de produtos.
 Responsabilidades:
 - Cobrir a validação de marca_id em atualizar_produto (PUT /produtos/{id}).
 - Cobrir a validação de valores positivos em preço, peso e estoque.
+- Documentar que alterar o estoque pelo PUT não gera movimentação.
 """
 from fastapi.testclient import TestClient
 
@@ -212,10 +213,26 @@ def test_listagens_nao_quebram_com_produto_antigo_fora_das_validacoes_novas(clie
         json={"nome": "Antiga", "marca_id": marca_id, "especie": "cachorro", "fase_vida": "adulto",
               "peso_kg": 10.0, "preco": 50.0, "quantidade_estoque": 1},
     ).json()
-    # Dados gravados antes das validações de entrada (preço 0, estoque negativo) continuam no banco.
+    # Dados gravados antes das validações de entrada (preço 0) continuam no banco.
+    # Estoque negativo não entra aqui: o CHECK ck_produtos_stock_non_negative o impede no banco.
     db = next(app.dependency_overrides[get_db]())
-    db.execute(text("UPDATE produtos SET preco = 0, quantidade_estoque = -2 WHERE id = :id"), {"id": produto["id"]})
+    db.execute(text("UPDATE produtos SET preco = 0 WHERE id = :id"), {"id": produto["id"]})
     db.commit()
 
     assert client.get("/produtos/").status_code == 200
     assert client.get(f"/produtos/{produto['id']}").status_code == 200
+
+
+def test_atualizar_quantidade_estoque_nao_gera_movimentacao(client: TestClient) -> None:
+    # Documenta o comportamento atual: o PUT sobrescreve o contador sem registrar movimentação,
+    # e o estoque pode divergir do histórico. Quando a regra mudar (Fase 4 do plano de
+    # melhorias), este teste deve passar a exigir a movimentação de ajuste.
+    marca_id = _criar_marca(client)
+    produto_id = _criar_produto(client, marca_id, quantidade_estoque=13)
+    movimentacoes_antes = client.get("/movimentacoes/").json()
+
+    resposta = client.put(f"/produtos/{produto_id}", json={"quantidade_estoque": 5})
+
+    assert resposta.status_code == 200
+    assert resposta.json()["quantidade_estoque"] == 5
+    assert client.get("/movimentacoes/").json() == movimentacoes_antes

@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Column, Integer, String, Float, Boolean, Enum, ForeignKey, DateTime, func
+from sqlalchemy import Column, Integer, String, Float, Boolean, Enum, ForeignKey, DateTime, CheckConstraint, func
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -34,6 +34,7 @@ class Marca(Base):
 
 class Produto(Base):
     __tablename__ = "produtos"
+    __table_args__ = (CheckConstraint("quantidade_estoque >= 0", name="ck_produtos_stock_non_negative"),)
 
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String, nullable=False)
@@ -63,12 +64,13 @@ class OrigemMovimentacao(str, enum.Enum):
 
 class Movimentacao(Base):
     __tablename__ = "movimentacoes"
+    __table_args__ = (CheckConstraint("quantidade > 0", name="ck_movimentacoes_quantity_positive"),)
 
     id = Column(Integer, primary_key=True, index=True)
-    produto_id = Column(Integer, ForeignKey("produtos.id"), nullable=False)
+    produto_id = Column(Integer, ForeignKey("produtos.id"), nullable=False, index=True)
     tipo = Column(Enum(TipoMovimentacao, native_enum=False), nullable=False)
     quantidade = Column(Integer, nullable=False)
-    criado_em = Column(DateTime(timezone=True), server_default=func.now())
+    criado_em = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     estornado_em = Column(DateTime(timezone=True), nullable=True)
     estorno_de_id = Column(Integer, ForeignKey("movimentacoes.id"), nullable=True)
     # Só as manuais podem ser estornadas na tela de Movimentações; as de compra se desfazem pela conta do cliente.
@@ -108,10 +110,11 @@ class Cliente(Base):
 
 class Compra(Base):
     __tablename__ = "compras"
+    __table_args__ = (CheckConstraint("quantidade > 0", name="ck_compras_quantity_positive"),)
 
     id = Column(Integer, primary_key=True, index=True)
-    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False)
-    produto_id = Column(Integer, ForeignKey("produtos.id"), nullable=False)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False, index=True)
+    produto_id = Column(Integer, ForeignKey("produtos.id"), nullable=False, index=True)
     quantidade = Column(Integer, nullable=False)
     preco_unitario = Column(Float, nullable=False)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
@@ -127,9 +130,10 @@ class Compra(Base):
 
 class Pagamento(Base):
     __tablename__ = "pagamentos"
+    __table_args__ = (CheckConstraint("valor > 0", name="ck_pagamentos_amount_positive"),)
 
     id = Column(Integer, primary_key=True, index=True)
-    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False, index=True)
     valor = Column(Float, nullable=False)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
 
