@@ -3,15 +3,12 @@ import os
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import auth, models
-from .database import engine
+from . import auth
 from .routers import marcas, produtos, movimentacoes, clientes
 
 # Em produção (DATABASE_URL definida) o sistema fica na internet: exige senha.
 if os.getenv("DATABASE_URL") and not auth.ADMIN_PASSWORD:
     raise RuntimeError("Defina ADMIN_PASSWORD para rodar em produção.")
-
-models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Produsul Cereais - Controle de Estoque")
 

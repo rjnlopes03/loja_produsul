@@ -213,9 +213,10 @@ def test_listagens_nao_quebram_com_produto_antigo_fora_das_validacoes_novas(clie
         json={"nome": "Antiga", "marca_id": marca_id, "especie": "cachorro", "fase_vida": "adulto",
               "peso_kg": 10.0, "preco": 50.0, "quantidade_estoque": 1},
     ).json()
-    # Dados gravados antes das validações de entrada (preço 0, estoque negativo) continuam no banco.
+    # Dados gravados antes das validações de entrada (preço 0) continuam no banco.
+    # Estoque negativo não entra aqui: o CHECK ck_produtos_stock_non_negative o impede no banco.
     db = next(app.dependency_overrides[get_db]())
-    db.execute(text("UPDATE produtos SET preco = 0, quantidade_estoque = -2 WHERE id = :id"), {"id": produto["id"]})
+    db.execute(text("UPDATE produtos SET preco = 0 WHERE id = :id"), {"id": produto["id"]})
     db.commit()
 
     assert client.get("/produtos/").status_code == 200

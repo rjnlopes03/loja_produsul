@@ -24,6 +24,8 @@ if (-not (Test-Path (Join-Path $root "frontend\node_modules"))) {
 $backendJob = Start-Job -Name backend -ScriptBlock {
     param($root, $venvPython)
     Set-Location (Join-Path $root "backend")
+    # As tabelas são criadas só pelas migrations (como no start do Render).
+    & $venvPython -m alembic upgrade head
     & $venvPython -m uvicorn app.main:app --reload --host 0.0.0.0
 } -ArgumentList $root, $venvPython
 
